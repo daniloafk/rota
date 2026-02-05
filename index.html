@@ -1498,55 +1498,9 @@
         // CONTROLE DO FORMULÁRIO
         // ============================================================
         function isFormOpen() {
-            const now = new Date();
-            const currentTime = now.toTimeString().slice(0, 5); // HH:MM
-            const { form_enabled, open_time, close_time } = settings;
-
-            // Sem horários definidos = apenas controle manual
-            if (!open_time && !close_time) {
-                return form_enabled;
-            }
-
-            // Com horários definidos, calculamos se está dentro da janela
-            let dentroDoHorario = false;
-
-            // Apenas horário de ABRIR definido
-            if (open_time && !close_time) {
-                dentroDoHorario = currentTime >= open_time;
-            }
-            // Apenas horário de FECHAR definido
-            else if (!open_time && close_time) {
-                dentroDoHorario = currentTime < close_time;
-            }
-            // Ambos horários definidos
-            else if (open_time && close_time) {
-                // Janela normal (ex: 08:00 - 18:00)
-                if (open_time <= close_time) {
-                    dentroDoHorario = currentTime >= open_time && currentTime < close_time;
-                } else {
-                    // Janela atravessando meia-noite (ex: 22:00 - 06:00)
-                    dentroDoHorario = currentTime >= open_time || currentTime < close_time;
-                }
-            }
-
-            // COMBINA: Está aberto se está dentro do horário E habilitado manualmente
-            // Mas se NÃO tem horário de abrir, considera que pode abrir a qualquer momento
-            // E se NÃO tem horário de fechar, considera que pode ficar aberto
-            
-            // Lógica final:
-            // - Se form_enabled = false (desabilitado manual) → FECHADO sempre
-            // - Se form_enabled = true (habilitado manual) → segue o horário (ou aberto se sem horário)
-            
-            if (!form_enabled) {
-                return false; // Desabilitado manualmente = sempre fechado
-            }
-            
-            // Habilitado manualmente, verifica horário
-            if (!open_time && !close_time) {
-                return true; // Sem horários = aberto
-            }
-            
-            return dentroDoHorario;
+            // SIMPLES: O formulário está aberto se form_enabled = true
+            // A lógica de horários é processada apenas no admin para mudar o form_enabled
+            return settings.form_enabled;
         }
 
         function updateFormControlUI() {
