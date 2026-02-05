@@ -934,12 +934,10 @@
                     <span class="form-control-label">Formulário:</span>
                     <span class="form-status-badge" id="formStatusBadge">—</span>
 
-                    <span class="form-control-label" style="margin-left: 10px;">Horário:</span>
-                    <label class="form-control-mini">
+                    <label class="form-control-mini">Abrir
                         <input type="time" id="publicOpenTime" title="Horário de abertura">
                     </label>
-                    <span style="color: var(--text-secondary);">às</span>
-                    <label class="form-control-mini">
+                    <label class="form-control-mini">Fechar
                         <input type="time" id="publicCloseTime" title="Horário de fechamento">
                     </label>
 
@@ -1342,11 +1340,20 @@
 
             if (!error && data) {
                 settings = data;
+                console.log('⚙️ Settings carregadas:', {
+                    form_enabled: settings.form_enabled,
+                    open_time: settings.open_time,
+                    close_time: settings.close_time
+                });
+            } else if (error) {
+                console.error('❌ Erro ao carregar settings:', error);
             }
             return settings;
         }
 
         async function updateSettings(newSettings) {
+            console.log('💾 Salvando settings:', newSettings);
+            
             const { data, error } = await supabaseClient
                 .from('settings')
                 .upsert([{ id: 1, ...newSettings }])
@@ -1355,6 +1362,7 @@
 
             if (error) throw error;
             settings = data;
+            console.log('✅ Settings salvas com sucesso:', settings);
             return settings;
         }
 
@@ -1419,10 +1427,31 @@
         }
 
         function handleSettingsChange(payload) {
+            console.log('🔔 Settings alteradas via Realtime:', payload);
+            
             if (payload.new) {
+                const oldSettings = { ...settings };
                 settings = payload.new;
+                
+                console.log('📊 Configurações atualizadas:', {
+                    form_enabled: settings.form_enabled,
+                    open_time: settings.open_time,
+                    close_time: settings.close_time
+                });
+                
                 updateFormControlUI();
                 applyFormAvailability();
+                
+                // Notificar mudança no formulário público
+                const isPublic = window.location.hash === '#form' || document.querySelector('#formView.active');
+                if (isPublic) {
+                    const isOpen = isFormOpen();
+                    if (isOpen) {
+                        showToast('🟢 Formulário ABERTO!', 'success');
+                    } else {
+                        showToast('🔴 Formulário FECHADO!', 'warning');
+                    }
+                }
             }
         }
 
@@ -2311,14 +2340,27 @@
             setupFileUpload();
         }
 
-        // Verificar horário do formulário periodicamente (a cada 30 segundos)
-        setInterval(() => {
+        // Verificar horário do formulário periodicamente (a cada 10 segundos para testes, depois pode aumentar)
+        setInterval(async () => {
             const isPublic = window.location.hash === '#form' || document.querySelector('#formView.active');
+            
+            // Sempre recarrega as settings do banco para pegar mudanças feitas no admin
+            await loadSettings();
             
             if (isPublic) {
                 const wasOpen = $('formClosedBanner')?.style.display === 'none';
                 applyFormAvailability();
                 const isNowOpen = $('formClosedBanner')?.style.display === 'none';
+                
+                // Log para debug
+                console.log('⏰ Verificação periódica:', {
+                    hora_atual: new Date().toTimeString().slice(0, 5),
+                    form_enabled: settings.form_enabled,
+                    open_time: settings.open_time,
+                    close_time: settings.close_time,
+                    estava_aberto: wasOpen,
+                    esta_aberto: isNowOpen
+                });
                 
                 // Notificar se mudou de estado
                 if (wasOpen !== isNowOpen) {
@@ -2333,7 +2375,7 @@
             if (currentUser) {
                 updateFormControlUI();
             }
-        }, 30000); // A cada 30 segundos
+        }, 10000); // A cada 10 segundos
 
         // Iniciar
         document.addEventListener('DOMContentLoaded', init);
