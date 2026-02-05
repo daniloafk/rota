@@ -1181,6 +1181,7 @@
         let deliverers = [];
         let settings = { form_enabled: true, open_time: null, close_time: null };
         let realtimeChannel = null;
+        let manualOverride = false; // Flag para indicar que houve ação manual
 
         // ============================================================
         // HELPERS
@@ -1590,8 +1591,9 @@
         async function toggleFormEnabled() {
             showLoading();
             try {
+                manualOverride = true; // Marca que houve ação manual
                 await updateSettings({ ...settings, form_enabled: !settings.form_enabled });
-                showToast(`Formulário ${settings.form_enabled ? 'habilitado' : 'desabilitado'}!`, 'success');
+                showToast(`Formulário ${settings.form_enabled ? 'habilitado' : 'desabilitado'} manualmente!`, 'success');
             } catch (error) {
                 showToast('Erro: ' + error.message, 'danger');
             } finally {
@@ -1600,11 +1602,21 @@
         }
 
         async function saveFormSettings() {
-            const openTime = $('publicOpenTime').value.trim();
-            const closeTime = $('publicCloseTime').value.trim();
+            let openTime = $('publicOpenTime').value.trim();
+            let closeTime = $('publicCloseTime').value.trim();
+            
+            // Limpa o campo vazio visualmente também
+            if (openTime && !closeTime) {
+                $('publicCloseTime').value = '';
+            } else if (!openTime && closeTime) {
+                $('publicOpenTime').value = '';
+            }
 
             showLoading();
             try {
+                // Reseta o override manual quando salva novos horários
+                manualOverride = false;
+                
                 await updateSettings({
                     ...settings,
                     open_time: openTime || null,
@@ -1616,9 +1628,9 @@
                 if (openTime && closeTime) {
                     msg += `Aberto das ${openTime} às ${closeTime}`;
                 } else if (openTime) {
-                    msg += `Abre às ${openTime} (sem horário de fechar)`;
+                    msg += `Abre às ${openTime}`;
                 } else if (closeTime) {
-                    msg += `Fecha às ${closeTime} (sem horário de abrir)`;
+                    msg += `Fecha às ${closeTime}`;
                 } else {
                     msg += 'Horários removidos - controle manual ativo';
                 }
@@ -1638,6 +1650,7 @@
             
             showLoading();
             try {
+                manualOverride = false; // Reseta override
                 await updateSettings({
                     ...settings,
                     open_time: null,
@@ -2372,7 +2385,8 @@
             const { form_enabled, open_time, close_time } = settings;
             
             // LÓGICA DE AUTO-HABILITAR/DESABILITAR baseado no horário
-            if (isAdmin && (open_time || close_time)) {
+            // Só executa se NÃO houve override manual
+            if (isAdmin && (open_time || close_time) && !manualOverride) {
                 let shouldBeEnabled = form_enabled;
                 
                 // Apenas horário de ABRIR: habilita quando chegar a hora
@@ -2404,6 +2418,8 @@
                         console.error('Erro ao atualizar form_enabled:', error);
                     }
                 }
+            } else if (manualOverride) {
+                console.log('🖐️ Override manual ativo - horário automático ignorado');
             }
             
             if (isPublic) {
