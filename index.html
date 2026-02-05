@@ -1501,32 +1501,51 @@
             const currentTime = now.toTimeString().slice(0, 5); // HH:MM
             const { form_enabled, open_time, close_time } = settings;
 
-            // Se tem horários configurados, eles têm PRIORIDADE sobre o form_enabled
-            
+            // Sem horários definidos = apenas controle manual
+            if (!open_time && !close_time) {
+                return form_enabled;
+            }
+
+            // Com horários definidos, calculamos se está dentro da janela
+            let dentroDoHorario = false;
+
             // Apenas horário de ABRIR definido
             if (open_time && !close_time) {
-                // Abre no horário e fica aberto
-                return currentTime >= open_time;
+                dentroDoHorario = currentTime >= open_time;
             }
-
             // Apenas horário de FECHAR definido
-            if (!open_time && close_time) {
-                // Fica aberto até o horário de fechar
-                return currentTime < close_time;
+            else if (!open_time && close_time) {
+                dentroDoHorario = currentTime < close_time;
             }
-
             // Ambos horários definidos
-            if (open_time && close_time) {
+            else if (open_time && close_time) {
                 // Janela normal (ex: 08:00 - 18:00)
                 if (open_time <= close_time) {
-                    return currentTime >= open_time && currentTime < close_time;
+                    dentroDoHorario = currentTime >= open_time && currentTime < close_time;
+                } else {
+                    // Janela atravessando meia-noite (ex: 22:00 - 06:00)
+                    dentroDoHorario = currentTime >= open_time || currentTime < close_time;
                 }
-                // Janela atravessando meia-noite (ex: 22:00 - 06:00)
-                return currentTime >= open_time || currentTime < close_time;
             }
 
-            // Sem horários definidos = segue o form_enabled (controle manual)
-            return form_enabled;
+            // COMBINA: Está aberto se está dentro do horário E habilitado manualmente
+            // Mas se NÃO tem horário de abrir, considera que pode abrir a qualquer momento
+            // E se NÃO tem horário de fechar, considera que pode ficar aberto
+            
+            // Lógica final:
+            // - Se form_enabled = false (desabilitado manual) → FECHADO sempre
+            // - Se form_enabled = true (habilitado manual) → segue o horário (ou aberto se sem horário)
+            
+            if (!form_enabled) {
+                return false; // Desabilitado manualmente = sempre fechado
+            }
+            
+            // Habilitado manualmente, verifica horário
+            if (!open_time && !close_time) {
+                return true; // Sem horários = aberto
+            }
+            
+            return dentroDoHorario;
         }
 
         function updateFormControlUI() {
@@ -2340,12 +2359,52 @@
             setupFileUpload();
         }
 
-        // Verificar horário do formulário periodicamente (a cada 10 segundos para testes, depois pode aumentar)
+        // Verificar horário do formulário periodicamente (a cada 10 segundos)
         setInterval(async () => {
             const isPublic = window.location.hash === '#form' || document.querySelector('#formView.active');
+            const isAdmin = currentUser !== null;
             
-            // Sempre recarrega as settings do banco para pegar mudanças feitas no admin
+            // Recarrega as settings do banco para pegar mudanças
             await loadSettings();
+            
+            const now = new Date();
+            const currentTime = now.toTimeString().slice(0, 5); // HH:MM
+            const { form_enabled, open_time, close_time } = settings;
+            
+            // LÓGICA DE AUTO-HABILITAR/DESABILITAR baseado no horário
+            if (isAdmin && (open_time || close_time)) {
+                let shouldBeEnabled = form_enabled;
+                
+                // Apenas horário de ABRIR: habilita quando chegar a hora
+                if (open_time && !close_time) {
+                    shouldBeEnabled = currentTime >= open_time;
+                }
+                // Apenas horário de FECHAR: desabilita quando chegar a hora
+                else if (!open_time && close_time) {
+                    shouldBeEnabled = currentTime < close_time;
+                }
+                // Ambos horários definidos
+                else if (open_time && close_time) {
+                    if (open_time <= close_time) {
+                        // Janela normal (ex: 08:00 - 18:00)
+                        shouldBeEnabled = currentTime >= open_time && currentTime < close_time;
+                    } else {
+                        // Janela atravessando meia-noite (ex: 22:00 - 06:00)
+                        shouldBeEnabled = currentTime >= open_time || currentTime < close_time;
+                    }
+                }
+                
+                // Se o estado deveria mudar, atualiza automaticamente
+                if (shouldBeEnabled !== form_enabled) {
+                    console.log(`⏰ Horário atingido! ${shouldBeEnabled ? 'ABRINDO' : 'FECHANDO'} formulário automaticamente...`);
+                    try {
+                        await updateSettings({ ...settings, form_enabled: shouldBeEnabled });
+                        showToast(shouldBeEnabled ? '🟢 Formulário ABERTO automaticamente!' : '🔴 Formulário FECHADO automaticamente!', shouldBeEnabled ? 'success' : 'warning');
+                    } catch (error) {
+                        console.error('Erro ao atualizar form_enabled:', error);
+                    }
+                }
+            }
             
             if (isPublic) {
                 const wasOpen = $('formClosedBanner')?.style.display === 'none';
@@ -2354,7 +2413,7 @@
                 
                 // Log para debug
                 console.log('⏰ Verificação periódica:', {
-                    hora_atual: new Date().toTimeString().slice(0, 5),
+                    hora_atual: currentTime,
                     form_enabled: settings.form_enabled,
                     open_time: settings.open_time,
                     close_time: settings.close_time,
