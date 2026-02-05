@@ -1469,12 +1469,29 @@
         // ============================================================
         function isFormOpen() {
             if (!settings.form_enabled) return false;
-            if (!settings.open_time || !settings.close_time) return settings.form_enabled;
-
+            
             const now = new Date();
             const currentTime = now.toTimeString().slice(0, 5); // HH:MM
             const { open_time, close_time } = settings;
 
+            // Sem horários definidos = segue apenas o form_enabled
+            if (!open_time && !close_time) {
+                return settings.form_enabled;
+            }
+
+            // Apenas horário de ABRIR definido
+            // Abre no horário e fica aberto até desabilitar manualmente
+            if (open_time && !close_time) {
+                return currentTime >= open_time;
+            }
+
+            // Apenas horário de FECHAR definido
+            // Fica aberto e fecha no horário definido
+            if (!open_time && close_time) {
+                return currentTime < close_time;
+            }
+
+            // Ambos horários definidos
             // Janela normal (ex: 08:00 - 18:00)
             if (open_time <= close_time) {
                 return currentTime >= open_time && currentTime < close_time;
@@ -1535,19 +1552,8 @@
         }
 
         async function saveFormSettings() {
-            let openTime = $('publicOpenTime').value.trim();
-            let closeTime = $('publicCloseTime').value.trim();
-
-            // Se apenas um campo estiver preenchido, limpa ambos e avisa
-            if ((openTime && !closeTime) || (!openTime && closeTime)) {
-                // Limpa os campos visualmente
-                $('publicOpenTime').value = '';
-                $('publicCloseTime').value = '';
-                openTime = '';
-                closeTime = '';
-                showToast('Preencha AMBOS os horários ou deixe AMBOS vazios. Campos foram limpos.', 'warning');
-                return;
-            }
+            const openTime = $('publicOpenTime').value.trim();
+            const closeTime = $('publicCloseTime').value.trim();
 
             showLoading();
             try {
@@ -1557,11 +1563,19 @@
                     close_time: closeTime || null
                 });
                 
-                const statusMsg = (!openTime && !closeTime) 
-                    ? 'Horários removidos! Formulário segue o status de Habilitar/Desabilitar.'
-                    : `Horários salvos! Aberto das ${openTime} às ${closeTime}`;
+                // Mensagem de feedback clara
+                let msg = 'Configuração salva! ';
+                if (openTime && closeTime) {
+                    msg += `Aberto das ${openTime} às ${closeTime}`;
+                } else if (openTime) {
+                    msg += `Abre às ${openTime} (sem horário de fechar)`;
+                } else if (closeTime) {
+                    msg += `Fecha às ${closeTime} (sem horário de abrir)`;
+                } else {
+                    msg += 'Horários removidos - controle manual ativo';
+                }
                     
-                showToast(statusMsg, 'success');
+                showToast(msg, 'success');
             } catch (error) {
                 showToast('Erro: ' + error.message, 'danger');
             } finally {
@@ -1581,7 +1595,7 @@
                     open_time: null,
                     close_time: null
                 });
-                showToast('Horários removidos!', 'success');
+                showToast('Horários removidos! Controle manual ativo.', 'success');
             } catch (error) {
                 showToast('Erro: ' + error.message, 'danger');
             } finally {
