@@ -934,15 +934,18 @@
                     <span class="form-control-label">Formulário:</span>
                     <span class="form-status-badge" id="formStatusBadge">—</span>
 
-                    <label class="form-control-mini">Abrir
-                        <input type="time" id="publicOpenTime">
+                    <span class="form-control-label" style="margin-left: 10px;">Horário:</span>
+                    <label class="form-control-mini">
+                        <input type="time" id="publicOpenTime" title="Horário de abertura">
                     </label>
-                    <label class="form-control-mini">Fechar
-                        <input type="time" id="publicCloseTime">
+                    <span style="color: var(--text-secondary);">às</span>
+                    <label class="form-control-mini">
+                        <input type="time" id="publicCloseTime" title="Horário de fechamento">
                     </label>
 
+                    <button class="btn btn-primary" onclick="saveFormSettings()" title="Salvar horários">💾 Salvar</button>
+                    <button class="btn btn-secondary" onclick="clearFormSchedule()" title="Limpar horários">🗑️</button>
                     <button class="btn btn-secondary" id="toggleFormBtn" onclick="toggleFormEnabled()">Desabilitar</button>
-                    <button class="btn btn-primary" onclick="saveFormSettings()">Salvar</button>
                 </div>
             </div>
 
@@ -1472,11 +1475,11 @@
             const currentTime = now.toTimeString().slice(0, 5); // HH:MM
             const { open_time, close_time } = settings;
 
-            // Janela normal
+            // Janela normal (ex: 08:00 - 18:00)
             if (open_time <= close_time) {
                 return currentTime >= open_time && currentTime < close_time;
             }
-            // Janela atravessando meia-noite
+            // Janela atravessando meia-noite (ex: 22:00 - 06:00)
             return currentTime >= open_time || currentTime < close_time;
         }
 
@@ -1532,11 +1535,17 @@
         }
 
         async function saveFormSettings() {
-            const openTime = $('publicOpenTime').value;
-            const closeTime = $('publicCloseTime').value;
+            let openTime = $('publicOpenTime').value.trim();
+            let closeTime = $('publicCloseTime').value.trim();
 
+            // Se apenas um campo estiver preenchido, limpa ambos e avisa
             if ((openTime && !closeTime) || (!openTime && closeTime)) {
-                showToast('Preencha ambos os horários ou deixe ambos vazios', 'warning');
+                // Limpa os campos visualmente
+                $('publicOpenTime').value = '';
+                $('publicCloseTime').value = '';
+                openTime = '';
+                closeTime = '';
+                showToast('Preencha AMBOS os horários ou deixe AMBOS vazios. Campos foram limpos.', 'warning');
                 return;
             }
 
@@ -1547,7 +1556,32 @@
                     open_time: openTime || null,
                     close_time: closeTime || null
                 });
-                showToast('Horários salvos!', 'success');
+                
+                const statusMsg = (!openTime && !closeTime) 
+                    ? 'Horários removidos! Formulário segue o status de Habilitar/Desabilitar.'
+                    : `Horários salvos! Aberto das ${openTime} às ${closeTime}`;
+                    
+                showToast(statusMsg, 'success');
+            } catch (error) {
+                showToast('Erro: ' + error.message, 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Função para limpar horários rapidamente
+        async function clearFormSchedule() {
+            $('publicOpenTime').value = '';
+            $('publicCloseTime').value = '';
+            
+            showLoading();
+            try {
+                await updateSettings({
+                    ...settings,
+                    open_time: null,
+                    close_time: null
+                });
+                showToast('Horários removidos!', 'success');
             } catch (error) {
                 showToast('Erro: ' + error.message, 'danger');
             } finally {
@@ -2263,15 +2297,29 @@
             setupFileUpload();
         }
 
-        // Verificar horário do formulário periodicamente
+        // Verificar horário do formulário periodicamente (a cada 30 segundos)
         setInterval(() => {
-            if (window.location.hash === '#form' || document.querySelector('#formView.active')) {
+            const isPublic = window.location.hash === '#form' || document.querySelector('#formView.active');
+            
+            if (isPublic) {
+                const wasOpen = $('formClosedBanner')?.style.display === 'none';
                 applyFormAvailability();
+                const isNowOpen = $('formClosedBanner')?.style.display === 'none';
+                
+                // Notificar se mudou de estado
+                if (wasOpen !== isNowOpen) {
+                    if (isNowOpen) {
+                        showToast('🟢 Formulário ABERTO! Você já pode se cadastrar.', 'success');
+                    } else {
+                        showToast('🔴 Formulário FECHADO! Aguarde o horário de liberação.', 'warning');
+                    }
+                }
             }
+            
             if (currentUser) {
                 updateFormControlUI();
             }
-        }, 60000); // A cada minuto
+        }, 30000); // A cada 30 segundos
 
         // Iniciar
         document.addEventListener('DOMContentLoaded', init);
