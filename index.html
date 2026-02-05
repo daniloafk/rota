@@ -1431,7 +1431,7 @@
             console.log('🔔 Settings alteradas via Realtime:', payload);
             
             if (payload.new) {
-                const oldSettings = { ...settings };
+                const oldFormEnabled = settings.form_enabled;
                 settings = payload.new;
                 
                 console.log('📊 Configurações atualizadas:', {
@@ -1443,11 +1443,10 @@
                 updateFormControlUI();
                 applyFormAvailability();
                 
-                // Notificar mudança no formulário público
+                // Notificar mudança no formulário público APENAS se form_enabled mudou
                 const isPublic = window.location.hash === '#form' || document.querySelector('#formView.active');
-                if (isPublic) {
-                    const isOpen = isFormOpen();
-                    if (isOpen) {
+                if (isPublic && oldFormEnabled !== settings.form_enabled) {
+                    if (settings.form_enabled) {
                         showToast('🟢 Formulário ABERTO!', 'success');
                     } else {
                         showToast('🔴 Formulário FECHADO!', 'warning');
@@ -2377,28 +2376,15 @@
             }
             
             if (isPublic) {
-                const wasOpen = $('formClosedBanner')?.style.display === 'none';
                 applyFormAvailability();
-                const isNowOpen = $('formClosedBanner')?.style.display === 'none';
                 
                 // Log para debug
                 console.log('⏰ Verificação periódica:', {
                     hora_atual: currentTime,
                     form_enabled: settings.form_enabled,
                     open_time: settings.open_time,
-                    close_time: settings.close_time,
-                    estava_aberto: wasOpen,
-                    esta_aberto: isNowOpen
+                    close_time: settings.close_time
                 });
-                
-                // Notificar se mudou de estado
-                if (wasOpen !== isNowOpen) {
-                    if (isNowOpen) {
-                        showToast('🟢 Formulário ABERTO! Você já pode se cadastrar.', 'success');
-                    } else {
-                        showToast('🔴 Formulário FECHADO! Aguarde o horário de liberação.', 'warning');
-                    }
-                }
             }
             
             if (currentUser) {
