@@ -1497,36 +1497,36 @@
         // CONTROLE DO FORMULÁRIO
         // ============================================================
         function isFormOpen() {
-            if (!settings.form_enabled) return false;
-            
             const now = new Date();
             const currentTime = now.toTimeString().slice(0, 5); // HH:MM
-            const { open_time, close_time } = settings;
+            const { form_enabled, open_time, close_time } = settings;
 
-            // Sem horários definidos = segue apenas o form_enabled
-            if (!open_time && !close_time) {
-                return settings.form_enabled;
-            }
-
+            // Se tem horários configurados, eles têm PRIORIDADE sobre o form_enabled
+            
             // Apenas horário de ABRIR definido
-            // Abre no horário e fica aberto até desabilitar manualmente
             if (open_time && !close_time) {
+                // Abre no horário e fica aberto
                 return currentTime >= open_time;
             }
 
             // Apenas horário de FECHAR definido
-            // Fica aberto e fecha no horário definido
             if (!open_time && close_time) {
+                // Fica aberto até o horário de fechar
                 return currentTime < close_time;
             }
 
             // Ambos horários definidos
-            // Janela normal (ex: 08:00 - 18:00)
-            if (open_time <= close_time) {
-                return currentTime >= open_time && currentTime < close_time;
+            if (open_time && close_time) {
+                // Janela normal (ex: 08:00 - 18:00)
+                if (open_time <= close_time) {
+                    return currentTime >= open_time && currentTime < close_time;
+                }
+                // Janela atravessando meia-noite (ex: 22:00 - 06:00)
+                return currentTime >= open_time || currentTime < close_time;
             }
-            // Janela atravessando meia-noite (ex: 22:00 - 06:00)
-            return currentTime >= open_time || currentTime < close_time;
+
+            // Sem horários definidos = segue o form_enabled (controle manual)
+            return form_enabled;
         }
 
         function updateFormControlUI() {
