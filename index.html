@@ -1163,7 +1163,7 @@
 
     <script>
         // ============================================================
-        // ⚠️ CONFIGURAÇÃO DO SUPABASE - SUBSTITUA PELOS SEUS VALORES!
+        // CONFIGURAÇÃO DO SUPABASE
         // ============================================================
         const SUPABASE_URL = 'https://sqmereekfdphvnprnnxx.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxbWVyZWVrZmRwaHZucHJubnh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNTY5NDUsImV4cCI6MjA4NTgzMjk0NX0.x3-Xx9KpNJp9eMu533Ww-Pv7TaxmJqaXrvVcEVHa3CQ';
@@ -1363,7 +1363,7 @@
                 supabaseClient.removeChannel(realtimeChannel);
             }
 
-            realtimeChannel = supabase
+            realtimeChannel = supabaseClient
                 .channel('all-changes')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'routes' }, payload => {
                     console.log('🔄 Rota alterada:', payload.eventType);
