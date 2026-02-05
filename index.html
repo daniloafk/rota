@@ -1,0 +1,2287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopee - Rotas Disponíveis</title>
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- SheetJS para Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- html2canvas para gerar imagens -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #f8f9fc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f3f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+            --accent-primary: #10b981;
+            --accent-secondary: #059669;
+            --accent-light: #d1fae5;
+            --accent-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .app-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .logo-icon { font-size: 28px; }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* Realtime Indicator */
+        .realtime-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 20px;
+        }
+
+        .realtime-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            animation: pulse 2s infinite;
+        }
+
+        .realtime-dot.disconnected {
+            background: var(--danger);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.9); }
+        }
+
+        /* Tabs */
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--accent-light);
+            color: var(--accent-secondary);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .view.active { display: block; }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+        }
+
+        .card-header { margin-bottom: 20px; }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .card-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover { background: var(--border-color); }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover { opacity: 0.9; }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            font-size: 18px;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        /* Forms */
+        .form-group { margin-bottom: 20px; }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: var(--danger);
+            margin-left: 4px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 16px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .upload-area.dragging {
+            border-color: var(--accent-primary);
+            background: var(--accent-light);
+        }
+
+        .upload-icon { font-size: 48px; margin-bottom: 16px; }
+        .upload-text { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+        .upload-hint { font-size: 14px; color: var(--text-secondary); }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead { background: var(--bg-tertiary); }
+
+        th {
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        tbody tr:hover { background: var(--bg-tertiary); }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .badge-success {
+            background: var(--accent-light);
+            color: var(--accent-secondary);
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 16px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .alert-success {
+            background: var(--accent-light);
+            color: var(--accent-secondary);
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid var(--info);
+        }
+
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-left: 4px solid var(--warning);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
+        }
+
+        .empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+        .empty-text { font-size: 16px; }
+
+        /* Routes Grid (Form) */
+        .routes-grid {
+            display: grid;
+            gap: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .route-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--bg-secondary);
+        }
+
+        .route-item:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .route-item.selected {
+            border-color: var(--accent-primary);
+            background: var(--accent-light);
+        }
+
+        .route-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--accent-primary);
+        }
+
+        .route-info { flex: 1; }
+
+        .route-location {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .route-details {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Filters */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px 16px 10px 40px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 12px center;
+        }
+
+        .filter-section { margin-bottom: 16px; }
+
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .filter-chip {
+            padding: 6px 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+        }
+
+        .filter-chip:hover { border-color: var(--accent-primary); }
+
+        .filter-chip.active {
+            border-color: var(--accent-primary);
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* Login */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 48px 40px;
+            box-shadow: var(--shadow-lg);
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-icon { font-size: 64px; margin-bottom: 16px; }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* User Menu */
+        .user-menu { position: relative; }
+
+        .user-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .user-button:hover { background: var(--border-color); }
+
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            min-width: 200px;
+            z-index: 1000;
+        }
+
+        .user-dropdown.active { display: block; }
+
+        .user-dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .user-dropdown-item:last-child { border-bottom: none; }
+        .user-dropdown-item:hover { background: var(--bg-tertiary); }
+        .user-dropdown-item.danger { color: var(--danger); }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header { margin-bottom: 24px; }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.active { display: flex; }
+
+        .loading-spinner {
+            background: var(--bg-secondary);
+            padding: 24px 32px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--accent-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        /* Form Control (Admin) */
+        .form-control-inline {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 14px;
+            padding-left: 14px;
+            border-left: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+
+        .form-control-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .form-status-badge {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .form-status-open {
+            background: rgba(16, 185, 129, 0.15);
+            color: #059669;
+        }
+
+        .form-status-closed {
+            background: rgba(239, 68, 68, 0.15);
+            color: #dc2626;
+        }
+
+        .form-control-mini {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .form-control-inline input[type="time"] {
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        .form-control-inline .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Public Mode */
+        .public-mode .container {
+            max-width: 900px;
+            padding-top: 40px;
+        }
+
+        /* Animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            max-width: 450px;
+            margin: 0 auto;
+            padding: 16px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10000;
+            animation: slideDown 0.3s ease;
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 16px 12px; }
+            
+            .app-header {
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .tab-nav { flex: 1; }
+
+            .tab-btn {
+                flex: 1;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+
+            .stats-grid { grid-template-columns: 1fr; }
+
+            .card { padding: 16px; }
+
+            .filter-bar { flex-direction: column; }
+
+            .search-input { min-width: 100%; }
+
+            .filter-bar .btn { width: 100%; }
+
+            table { min-width: 600px; }
+
+            .btn { width: 100%; }
+
+            .modal-content { padding: 24px 20px; }
+
+            .modal-actions { flex-direction: column; }
+
+            .form-control-inline {
+                margin-left: 0;
+                padding-left: 0;
+                border-left: none;
+                margin-top: 10px;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .login-card { padding: 32px 24px; }
+
+            .routes-grid { max-height: 300px; }
+        }
+
+        @media (max-width: 1200px) {
+            .form-control-inline {
+                margin-left: 0;
+                padding-left: 0;
+                border-left: none;
+                margin-top: 10px;
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Carregando...</p>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container" style="display: none;">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">🔐</div>
+                <h1 class="login-title">Shopee - Rotas</h1>
+                <p class="login-subtitle">Entre com suas credenciais para acessar o painel</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label required" for="loginEmail">Email</label>
+                    <input type="email" class="form-input" id="loginEmail" required placeholder="admin@empresa.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required" for="loginPassword">Senha</label>
+                    <input type="password" class="form-input" id="loginPassword" required placeholder="••••••••">
+                </div>
+
+                <div id="loginError"></div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">
+                    🔓 Entrar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" style="display: none;">
+        <header class="app-header" id="appHeader">
+            <div class="logo">
+                <span class="logo-icon">🚚</span>
+                <span class="logo-text">Shopee - Rotas Disponíveis</span>
+
+                <!-- Realtime Indicator -->
+                <div class="realtime-indicator" id="realtimeIndicator">
+                    <div class="realtime-dot" id="realtimeDot"></div>
+                    <span id="realtimeText">Tempo real</span>
+                </div>
+
+                <!-- Form Control (Admin only) -->
+                <div class="form-control-inline" id="formControlInline" style="display:none;">
+                    <span class="form-control-label">Formulário:</span>
+                    <span class="form-status-badge" id="formStatusBadge">—</span>
+
+                    <label class="form-control-mini">Abrir
+                        <input type="time" id="publicOpenTime">
+                    </label>
+                    <label class="form-control-mini">Fechar
+                        <input type="time" id="publicCloseTime">
+                    </label>
+
+                    <button class="btn btn-secondary" id="toggleFormBtn" onclick="toggleFormEnabled()">Desabilitar</button>
+                    <button class="btn btn-primary" onclick="saveFormSettings()">Salvar</button>
+                </div>
+            </div>
+
+            <div class="header-actions" id="headerActions">
+                <nav class="tab-nav">
+                    <button class="tab-btn active" data-view="admin" onclick="switchView('admin')">📊 Admin</button>
+                    <button class="tab-btn" data-view="form" onclick="switchView('form')">📝 Formulário</button>
+                </nav>
+
+                <div class="user-menu" id="userMenu">
+                    <button class="user-button" onclick="toggleUserMenu()">
+                        <span>👤</span>
+                        <span id="currentUsername">Admin</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="user-dropdown-item" onclick="openChangePasswordModal()">
+                            <span>🔑</span> Alterar Senha
+                        </div>
+                        <div class="user-dropdown-item danger" onclick="handleLogout()">
+                            <span>🚪</span> Sair
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <!-- Admin View -->
+            <div id="adminView" class="view active">
+                <div class="alert alert-info">
+                    <span>🔗</span>
+                    <div>
+                        <strong>Link Público do Formulário</strong><br>
+                        <span style="font-size: 14px;">
+                            Compartilhe este link com os entregadores. <strong>Não requer login!</strong>
+                        </span>
+                        <div style="margin-top: 12px;">
+                            <button class="btn btn-primary" onclick="copyFormLink()" style="width: auto;">
+                                📋 Copiar Link Público
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" style="border-left-color: #3b82f6;">
+                        <div class="stat-value" id="totalRoutes" style="color: #3b82f6;">0</div>
+                        <div class="stat-label">Total de Rotas</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #10b981;">
+                        <div class="stat-value" id="totalFreeRoutes" style="color: #10b981;">0</div>
+                        <div class="stat-label">Rotas Livres</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: #f59e0b;">
+                        <div class="stat-value" id="totalOccupiedRoutes" style="color: #f59e0b;">0</div>
+                        <div class="stat-label">Rotas Ocupadas</div>
+                    </div>
+                </div>
+
+                <!-- Import Routes -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📤 Importar Rotas</h2>
+                        <p class="card-subtitle">Envie uma planilha Excel ou CSV com: Cidade, Bairro, Tipo de Veículo</p>
+                    </div>
+
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📊</div>
+                        <div class="upload-text">Clique ou arraste a planilha aqui</div>
+                        <div class="upload-hint">Formatos aceitos: .xlsx, .xls, .csv</div>
+                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+                    </div>
+
+                    <div id="importStatus"></div>
+                </div>
+
+                <!-- Deliverers Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">👤 Entregadores Cadastrados</h2>
+                        <p class="card-subtitle">Atualização em tempo real - sem necessidade de recarregar</p>
+                    </div>
+
+                    <div class="filter-bar">
+                        <input type="text" class="search-input" id="searchDeliverers" placeholder="Buscar por nome ou placa..." oninput="renderDeliverersTable()">
+                        <button class="btn btn-secondary" onclick="exportDeliverersToExcel()">📥 Exportar Excel</button>
+                        <button class="btn btn-secondary" onclick="generateDeliverersImage()">📸 Gerar Imagem</button>
+                        <button class="btn btn-danger" onclick="confirmClearAllDeliverers()">🗑️ Limpar Tudo</button>
+                    </div>
+
+                    <div id="deliverersTableContainer"></div>
+                </div>
+
+                <!-- Routes Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🗺️ Rotas Cadastradas</h2>
+                        <p class="card-subtitle">Gerencie as rotas disponíveis para os entregadores</p>
+                    </div>
+
+                    <div class="filter-bar">
+                        <input type="text" class="search-input" id="searchRoutes" placeholder="Buscar por cidade ou bairro..." oninput="renderRoutesTable()">
+                        <button class="btn btn-secondary" onclick="exportRoutesToExcel()">📥 Exportar Excel</button>
+                        <button class="btn btn-danger" onclick="confirmClearAllRoutes()">🗑️ Limpar Tudo</button>
+                    </div>
+
+                    <div id="routesTableContainer"></div>
+                </div>
+            </div>
+
+            <!-- Form View (Public) -->
+            <div id="formView" class="view">
+                <div class="card" style="max-width: 900px; margin: 0 auto;">
+                    <div class="card-header">
+                        <h2 class="card-title">📝 Cadastro de Entregador</h2>
+                        <p class="card-subtitle">Preencha seus dados e escolha uma rota disponível</p>
+                    </div>
+
+                    <!-- Form Closed Banner -->
+                    <div id="formClosedBanner" class="alert alert-danger" style="display: none;">
+                        <span>🚫</span>
+                        <div>
+                            <strong>Formulário Fechado</strong><br>
+                            O cadastro está temporariamente indisponível. Aguarde o horário de liberação.
+                        </div>
+                    </div>
+
+                    <form id="delivererForm">
+                        <div class="form-group">
+                            <label class="form-label required" for="delivererName">Nome Completo</label>
+                            <input type="text" class="form-input" id="delivererName" required placeholder="Seu nome completo">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label required" for="vehiclePlate">Placa do Veículo</label>
+                            <input type="text" class="form-input" id="vehiclePlate" required placeholder="ABC1234" maxlength="7" style="text-transform: uppercase;">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label required">Escolha sua Rota</label>
+
+                            <div id="filterSection" class="filter-section" style="display: none;">
+                                <label style="font-size: 14px; color: var(--text-secondary);">🏙️ Filtrar por cidade:</label>
+                                <div id="cityFilters" class="filter-chips"></div>
+                            </div>
+
+                            <div id="vehicleFilterSection" class="filter-section" style="display: none;">
+                                <label style="font-size: 14px; color: var(--text-secondary);">🚗 Filtrar por veículo:</label>
+                                <div id="vehicleFilters" class="filter-chips"></div>
+                            </div>
+
+                            <div id="routesContainer" class="routes-grid"></div>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="submit" class="btn btn-primary" style="width: auto;">
+                                ✅ Confirmar Cadastro
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content" style="text-align: center;">
+            <div style="font-size: 64px; margin-bottom: 16px;">✅</div>
+            <h3 class="modal-title">Cadastro Realizado!</h3>
+            <p style="color: var(--text-secondary); margin: 16px 0;">
+                Suas informações foram registradas com sucesso!
+            </p>
+            <button class="btn btn-primary" onclick="closeModal('successModal')" style="width: auto;">
+                OK, Entendi
+            </button>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal" id="changePasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">🔑 Alterar Senha</h3>
+            </div>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label class="form-label required" for="newPassword">Nova Senha</label>
+                    <input type="password" class="form-input" id="newPassword" required minlength="6" placeholder="Mínimo 6 caracteres">
+                </div>
+                <div class="form-group">
+                    <label class="form-label required" for="confirmPassword">Confirmar Senha</label>
+                    <input type="password" class="form-input" id="confirmPassword" required minlength="6">
+                </div>
+                <div id="changePasswordError"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('changePasswordModal')" style="width: auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="width: auto;">Alterar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="confirmTitle">Confirmação</h3>
+            </div>
+            <p id="confirmMessage" style="color: var(--text-secondary);"></p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('confirmModal')" style="width: auto;">Cancelar</button>
+                <button class="btn btn-danger" id="confirmBtn" style="width: auto;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // ⚠️ CONFIGURAÇÃO DO SUPABASE - SUBSTITUA PELOS SEUS VALORES!
+        // ============================================================
+        const SUPABASE_URL = 'https://sqmereekfdphvnprnnxx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxbWVyZWVrZmRwaHZucHJubnh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNTY5NDUsImV4cCI6MjA4NTgzMjk0NX0.x3-Xx9KpNJp9eMu533Ww-Pv7TaxmJqaXrvVcEVHa3CQ';
+        // ============================================================
+
+        // Inicializar Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ============================================================
+        // ESTADO GLOBAL
+        // ============================================================
+        let currentUser = null;
+        let routes = [];
+        let deliverers = [];
+        let settings = { form_enabled: true, open_time: null, close_time: null };
+        let realtimeChannel = null;
+
+        // ============================================================
+        // HELPERS
+        // ============================================================
+        const $ = id => document.getElementById(id);
+        const showLoading = () => $('loadingOverlay').classList.add('active');
+        const hideLoading = () => $('loadingOverlay').classList.remove('active');
+
+        function showToast(message, type = 'info') {
+            // Remove toast existente
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+
+            const colors = {
+                success: { bg: '#d1fae5', text: '#059669', icon: '✅' },
+                danger: { bg: '#fee2e2', text: '#991b1b', icon: '❌' },
+                warning: { bg: '#fef3c7', text: '#92400e', icon: '⚠️' },
+                info: { bg: '#dbeafe', text: '#1e40af', icon: 'ℹ️' }
+            };
+            const c = colors[type] || colors.info;
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.style.cssText = `background: ${c.bg}; color: ${c.text};`;
+            toast.innerHTML = `
+                <span style="font-size: 20px;">${c.icon}</span>
+                <span style="flex: 1;">${message}</span>
+                <button onclick="this.parentElement.remove()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: inherit;">×</button>
+            `;
+
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+
+        function openModal(id) { $(id).classList.add('active'); }
+        function closeModal(id) { $(id).classList.remove('active'); }
+
+        function showConfirm(title, message, onConfirm) {
+            $('confirmTitle').textContent = title;
+            $('confirmMessage').textContent = message;
+            $('confirmBtn').onclick = () => {
+                closeModal('confirmModal');
+                onConfirm();
+            };
+            openModal('confirmModal');
+        }
+
+        function getVehicleBadgeStyle(vehicle) {
+            const styles = {
+                'Moto': 'background: #fef3c7; color: #92400e;',
+                'Carro': 'background: #dbeafe; color: #1e40af;',
+                'Van': 'background: #e0e7ff; color: #3730a3;',
+                'Caminhão': 'background: #fce7f3; color: #9d174d;',
+                'Bicicleta': 'background: #d1fae5; color: #059669;'
+            };
+            return styles[vehicle] || 'background: #f1f5f9; color: #475569;';
+        }
+
+        // ============================================================
+        // SUPABASE - BANCO DE DADOS
+        // ============================================================
+        
+        // ROTAS
+        async function loadRoutes() {
+            const { data, error } = await supabase
+                .from('routes')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Erro ao carregar rotas:', error);
+                return [];
+            }
+            routes = data || [];
+            return routes;
+        }
+
+        async function saveRoute(route) {
+            const { data, error } = await supabase
+                .from('routes')
+                .insert([route])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        }
+
+        async function deleteRouteById(id) {
+            const { error } = await supabase
+                .from('routes')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+        }
+
+        async function clearAllRoutes() {
+            const { error } = await supabase
+                .from('routes')
+                .delete()
+                .neq('id', '00000000-0000-0000-0000-000000000000');
+
+            if (error) throw error;
+        }
+
+        // ENTREGADORES
+        async function loadDeliverers() {
+            const { data, error } = await supabase
+                .from('deliverers')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Erro ao carregar entregadores:', error);
+                return [];
+            }
+            deliverers = data || [];
+            return deliverers;
+        }
+
+        async function saveDeliverer(deliverer) {
+            const { data, error } = await supabase
+                .from('deliverers')
+                .insert([deliverer])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        }
+
+        async function deleteDelivererById(id) {
+            const { error } = await supabase
+                .from('deliverers')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+        }
+
+        async function clearAllDeliverers() {
+            const { error } = await supabase
+                .from('deliverers')
+                .delete()
+                .neq('id', '00000000-0000-0000-0000-000000000000');
+
+            if (error) throw error;
+        }
+
+        // CONFIGURAÇÕES
+        async function loadSettings() {
+            const { data, error } = await supabase
+                .from('settings')
+                .select('*')
+                .eq('id', 1)
+                .single();
+
+            if (!error && data) {
+                settings = data;
+            }
+            return settings;
+        }
+
+        async function updateSettings(newSettings) {
+            const { data, error } = await supabase
+                .from('settings')
+                .upsert([{ id: 1, ...newSettings }])
+                .select()
+                .single();
+
+            if (error) throw error;
+            settings = data;
+            return settings;
+        }
+
+        // ============================================================
+        // REALTIME
+        // ============================================================
+        function setupRealtime() {
+            if (realtimeChannel) {
+                supabase.removeChannel(realtimeChannel);
+            }
+
+            realtimeChannel = supabase
+                .channel('all-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'routes' }, payload => {
+                    console.log('🔄 Rota alterada:', payload.eventType);
+                    handleRouteChange(payload);
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'deliverers' }, payload => {
+                    console.log('🔄 Entregador alterado:', payload.eventType);
+                    handleDelivererChange(payload);
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, payload => {
+                    console.log('🔄 Configurações alteradas');
+                    handleSettingsChange(payload);
+                })
+                .subscribe(status => {
+                    console.log('📡 Realtime:', status);
+                    updateRealtimeIndicator(status === 'SUBSCRIBED');
+                });
+        }
+
+        function handleRouteChange(payload) {
+            if (payload.eventType === 'INSERT') {
+                routes.unshift(payload.new);
+            } else if (payload.eventType === 'UPDATE') {
+                const idx = routes.findIndex(r => r.id === payload.new.id);
+                if (idx !== -1) routes[idx] = payload.new;
+            } else if (payload.eventType === 'DELETE') {
+                routes = routes.filter(r => r.id !== payload.old.id);
+            }
+            updateStats();
+            renderRoutesTable();
+            renderFormRoutes();
+        }
+
+        function handleDelivererChange(payload) {
+            if (payload.eventType === 'INSERT') {
+                deliverers.unshift(payload.new);
+                // Se não foi eu que cadastrei, mostrar notificação
+                if (currentUser) {
+                    showToast(`Novo cadastro: ${payload.new.name}`, 'info');
+                }
+            } else if (payload.eventType === 'UPDATE') {
+                const idx = deliverers.findIndex(d => d.id === payload.new.id);
+                if (idx !== -1) deliverers[idx] = payload.new;
+            } else if (payload.eventType === 'DELETE') {
+                deliverers = deliverers.filter(d => d.id !== payload.old.id);
+            }
+            updateStats();
+            renderDeliverersTable();
+            renderFormRoutes();
+        }
+
+        function handleSettingsChange(payload) {
+            if (payload.new) {
+                settings = payload.new;
+                updateFormControlUI();
+                applyFormAvailability();
+            }
+        }
+
+        function updateRealtimeIndicator(connected) {
+            const dot = $('realtimeDot');
+            const text = $('realtimeText');
+            if (dot && text) {
+                dot.classList.toggle('disconnected', !connected);
+                text.textContent = connected ? 'Tempo real' : 'Desconectado';
+            }
+        }
+
+        // ============================================================
+        // AUTENTICAÇÃO
+        // ============================================================
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            return session?.user || null;
+        }
+
+        async function loginWithEmail(email, password) {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email, password
+            });
+            if (error) throw error;
+            return data.user;
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            currentUser = null;
+            if (realtimeChannel) {
+                supabase.removeChannel(realtimeChannel);
+            }
+        }
+
+        async function changePassword(newPassword) {
+            const { error } = await supabase.auth.updateUser({ password: newPassword });
+            if (error) throw error;
+        }
+
+        // ============================================================
+        // CONTROLE DO FORMULÁRIO
+        // ============================================================
+        function isFormOpen() {
+            if (!settings.form_enabled) return false;
+            if (!settings.open_time || !settings.close_time) return settings.form_enabled;
+
+            const now = new Date();
+            const currentTime = now.toTimeString().slice(0, 5); // HH:MM
+            const { open_time, close_time } = settings;
+
+            // Janela normal
+            if (open_time <= close_time) {
+                return currentTime >= open_time && currentTime < close_time;
+            }
+            // Janela atravessando meia-noite
+            return currentTime >= open_time || currentTime < close_time;
+        }
+
+        function updateFormControlUI() {
+            if (!currentUser) return;
+
+            const badge = $('formStatusBadge');
+            const toggleBtn = $('toggleFormBtn');
+            const openInput = $('publicOpenTime');
+            const closeInput = $('publicCloseTime');
+
+            const open = isFormOpen();
+
+            if (badge) {
+                badge.textContent = open ? 'ABERTO' : 'FECHADO';
+                badge.className = 'form-status-badge ' + (open ? 'form-status-open' : 'form-status-closed');
+            }
+
+            if (toggleBtn) {
+                toggleBtn.textContent = settings.form_enabled ? 'Desabilitar' : 'Habilitar';
+                toggleBtn.className = 'btn ' + (settings.form_enabled ? 'btn-danger' : 'btn-primary');
+            }
+
+            if (openInput) openInput.value = settings.open_time || '';
+            if (closeInput) closeInput.value = settings.close_time || '';
+        }
+
+        function applyFormAvailability() {
+            const banner = $('formClosedBanner');
+            const form = $('delivererForm');
+            const open = isFormOpen();
+
+            if (banner) banner.style.display = open ? 'none' : 'flex';
+            
+            if (form) {
+                const inputs = form.querySelectorAll('input, button');
+                inputs.forEach(el => el.disabled = !open);
+                form.style.opacity = open ? '1' : '0.5';
+                form.style.pointerEvents = open ? 'auto' : 'none';
+            }
+        }
+
+        async function toggleFormEnabled() {
+            showLoading();
+            try {
+                await updateSettings({ ...settings, form_enabled: !settings.form_enabled });
+                showToast(`Formulário ${settings.form_enabled ? 'habilitado' : 'desabilitado'}!`, 'success');
+            } catch (error) {
+                showToast('Erro: ' + error.message, 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function saveFormSettings() {
+            const openTime = $('publicOpenTime').value;
+            const closeTime = $('publicCloseTime').value;
+
+            if ((openTime && !closeTime) || (!openTime && closeTime)) {
+                showToast('Preencha ambos os horários ou deixe ambos vazios', 'warning');
+                return;
+            }
+
+            showLoading();
+            try {
+                await updateSettings({
+                    ...settings,
+                    open_time: openTime || null,
+                    close_time: closeTime || null
+                });
+                showToast('Horários salvos!', 'success');
+            } catch (error) {
+                showToast('Erro: ' + error.message, 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // ============================================================
+        // RENDERIZAÇÃO
+        // ============================================================
+        function updateStats() {
+            const total = routes.length;
+            const occupiedIds = new Set(deliverers.map(d => d.route_id));
+            const free = routes.filter(r => !occupiedIds.has(r.id)).length;
+            const occupied = total - free;
+
+            $('totalRoutes').textContent = total;
+            $('totalFreeRoutes').textContent = free;
+            $('totalOccupiedRoutes').textContent = occupied;
+        }
+
+        function renderRoutesTable() {
+            const container = $('routesTableContainer');
+            if (!container) return;
+
+            if (routes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🗺️</div>
+                        <div class="empty-text">Nenhuma rota cadastrada</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const search = ($('searchRoutes')?.value || '').toLowerCase();
+            const filtered = routes.filter(r =>
+                r.cidade.toLowerCase().includes(search) ||
+                r.bairro.toLowerCase().includes(search)
+            );
+
+            const occupiedIds = new Set(deliverers.map(d => d.route_id));
+
+            container.innerHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cidade</th>
+                                <th>Bairro</th>
+                                <th>Veículo</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtered.map(r => {
+                                const occupied = occupiedIds.has(r.id);
+                                return `
+                                    <tr>
+                                        <td><strong>${r.cidade}</strong></td>
+                                        <td>${r.bairro}</td>
+                                        <td><span class="badge" style="${getVehicleBadgeStyle(r.veiculo)}">${r.veiculo}</span></td>
+                                        <td><span class="badge ${occupied ? 'badge-warning' : 'badge-success'}">${occupied ? '🔒 Ocupada' : '✅ Livre'}</span></td>
+                                        <td><button class="btn-icon" onclick="confirmDeleteRoute('${r.id}')">🗑️</button></td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderDeliverersTable() {
+            const container = $('deliverersTableContainer');
+            if (!container) return;
+
+            if (deliverers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👤</div>
+                        <div class="empty-text">Nenhum entregador cadastrado</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const search = ($('searchDeliverers')?.value || '').toLowerCase();
+            const filtered = deliverers.filter(d =>
+                d.name.toLowerCase().includes(search) ||
+                d.vehicle_plate.toLowerCase().includes(search)
+            );
+
+            container.innerHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Placa / Veículo</th>
+                                <th>Rota</th>
+                                <th>Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filtered.map(d => `
+                                <tr>
+                                    <td><strong>${d.name}</strong></td>
+                                    <td>
+                                        <span class="badge badge-info">${d.vehicle_plate}</span>
+                                        <span class="badge" style="margin-left: 4px; ${getVehicleBadgeStyle(d.route_veiculo)}">${d.route_veiculo}</span>
+                                    </td>
+                                    <td><span class="badge badge-success">${d.route_cidade} - ${d.route_bairro}</span></td>
+                                    <td>${new Date(d.created_at).toLocaleDateString('pt-BR')}</td>
+                                    <td><button class="btn-icon" onclick="confirmDeleteDeliverer('${d.id}')">🗑️</button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderFormRoutes() {
+            const container = $('routesContainer');
+            const cityFiltersContainer = $('cityFilters');
+            const vehicleFiltersContainer = $('vehicleFilters');
+            const filterSection = $('filterSection');
+            const vehicleFilterSection = $('vehicleFilterSection');
+
+            if (!container) return;
+
+            // Rotas ocupadas
+            const occupiedIds = new Set(deliverers.map(d => d.route_id));
+            const available = routes.filter(r => !occupiedIds.has(r.id));
+
+            if (routes.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info">
+                        <span>ℹ️</span>
+                        <div>Nenhuma rota disponível no momento.</div>
+                    </div>
+                `;
+                if (filterSection) filterSection.style.display = 'none';
+                if (vehicleFilterSection) vehicleFilterSection.style.display = 'none';
+                return;
+            }
+
+            if (available.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-warning">
+                        <span>⚠️</span>
+                        <div><strong>Todas as rotas já foram ocupadas!</strong></div>
+                    </div>
+                `;
+                if (filterSection) filterSection.style.display = 'none';
+                if (vehicleFilterSection) vehicleFilterSection.style.display = 'none';
+                return;
+            }
+
+            // Filtros
+            const cities = [...new Set(available.map(r => r.cidade))].sort();
+            const vehicles = [...new Set(available.map(r => r.veiculo))].sort();
+
+            if (cities.length > 1 && filterSection && cityFiltersContainer) {
+                filterSection.style.display = 'block';
+                cityFiltersContainer.innerHTML = `
+                    <div class="filter-chip active" data-filter="all">Todas</div>
+                    ${cities.map(c => `<div class="filter-chip" data-filter="${c}">${c}</div>`).join('')}
+                `;
+                cityFiltersContainer.querySelectorAll('.filter-chip').forEach(chip => {
+                    chip.onclick = () => {
+                        cityFiltersContainer.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                        chip.classList.add('active');
+                        applyFilters();
+                    };
+                });
+            } else if (filterSection) {
+                filterSection.style.display = 'none';
+            }
+
+            if (vehicles.length > 1 && vehicleFilterSection && vehicleFiltersContainer) {
+                vehicleFilterSection.style.display = 'block';
+                vehicleFiltersContainer.innerHTML = `
+                    <div class="filter-chip active" data-filter="all">Todos</div>
+                    ${vehicles.map(v => `<div class="filter-chip" data-filter="${v}">${v}</div>`).join('')}
+                `;
+                vehicleFiltersContainer.querySelectorAll('.filter-chip').forEach(chip => {
+                    chip.onclick = () => {
+                        vehicleFiltersContainer.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                        chip.classList.add('active');
+                        applyFilters();
+                    };
+                });
+            } else if (vehicleFilterSection) {
+                vehicleFilterSection.style.display = 'none';
+            }
+
+            applyFilters();
+
+            function applyFilters() {
+                const cityFilter = cityFiltersContainer?.querySelector('.filter-chip.active')?.dataset.filter || 'all';
+                const vehicleFilter = vehicleFiltersContainer?.querySelector('.filter-chip.active')?.dataset.filter || 'all';
+
+                let filtered = available;
+                if (cityFilter !== 'all') filtered = filtered.filter(r => r.cidade === cityFilter);
+                if (vehicleFilter !== 'all') filtered = filtered.filter(r => r.veiculo === vehicleFilter);
+
+                if (filtered.length === 0) {
+                    container.innerHTML = `
+                        <div class="alert alert-info">
+                            <span>ℹ️</span>
+                            <div>Nenhuma rota encontrada com os filtros selecionados.</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = filtered.map(r => `
+                    <div class="route-item" data-id="${r.id}">
+                        <input type="radio" class="route-checkbox" name="selectedRoute" value="${r.id}"
+                            data-cidade="${r.cidade}" data-bairro="${r.bairro}" data-veiculo="${r.veiculo}">
+                        <div class="route-info">
+                            <div class="route-location">📍 ${r.cidade} - ${r.bairro}</div>
+                            <div class="route-details">🚗 ${r.veiculo}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                container.querySelectorAll('.route-item').forEach(item => {
+                    item.onclick = (e) => {
+                        if (e.target.type === 'radio') return;
+                        const radio = item.querySelector('input[type="radio"]');
+                        radio.checked = true;
+                        container.querySelectorAll('.route-item').forEach(i => i.classList.remove('selected'));
+                        item.classList.add('selected');
+                    };
+
+                    item.querySelector('input').onchange = () => {
+                        container.querySelectorAll('.route-item').forEach(i => i.classList.remove('selected'));
+                        item.classList.add('selected');
+                    };
+                });
+            }
+        }
+
+        // ============================================================
+        // AÇÕES
+        // ============================================================
+        function confirmDeleteRoute(id) {
+            showConfirm('Deletar Rota', 'Tem certeza que deseja deletar esta rota?', async () => {
+                showLoading();
+                try {
+                    await deleteRouteById(id);
+                    showToast('Rota deletada!', 'success');
+                } catch (error) {
+                    showToast('Erro: ' + error.message, 'danger');
+                } finally {
+                    hideLoading();
+                }
+            });
+        }
+
+        function confirmDeleteDeliverer(id) {
+            showConfirm('Deletar Entregador', 'Tem certeza que deseja deletar este entregador?', async () => {
+                showLoading();
+                try {
+                    await deleteDelivererById(id);
+                    showToast('Entregador deletado!', 'success');
+                } catch (error) {
+                    showToast('Erro: ' + error.message, 'danger');
+                } finally {
+                    hideLoading();
+                }
+            });
+        }
+
+        function confirmClearAllRoutes() {
+            showConfirm('⚠️ Limpar Todas as Rotas', 'Esta ação é irreversível! Deseja continuar?', async () => {
+                showLoading();
+                try {
+                    await clearAllRoutes();
+                    showToast('Todas as rotas foram deletadas!', 'success');
+                } catch (error) {
+                    showToast('Erro: ' + error.message, 'danger');
+                } finally {
+                    hideLoading();
+                }
+            });
+        }
+
+        function confirmClearAllDeliverers() {
+            showConfirm('⚠️ Limpar Todos os Entregadores', 'Esta ação é irreversível! Deseja continuar?', async () => {
+                showLoading();
+                try {
+                    await clearAllDeliverers();
+                    showToast('Todos os entregadores foram deletados!', 'success');
+                } catch (error) {
+                    showToast('Erro: ' + error.message, 'danger');
+                } finally {
+                    hideLoading();
+                }
+            });
+        }
+
+        // ============================================================
+        // NAVEGAÇÃO
+        // ============================================================
+        function switchView(view) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            $(view + 'View').classList.add('active');
+            document.querySelector(`.tab-btn[data-view="${view}"]`)?.classList.add('active');
+
+            if (view === 'form') {
+                renderFormRoutes();
+                applyFormAvailability();
+            }
+        }
+
+        function toggleUserMenu() {
+            $('userDropdown').classList.toggle('active');
+        }
+
+        // Fechar menu ao clicar fora
+        document.addEventListener('click', (e) => {
+            const menu = $('userMenu');
+            if (menu && !menu.contains(e.target)) {
+                $('userDropdown').classList.remove('active');
+            }
+        });
+
+        function openChangePasswordModal() {
+            $('userDropdown').classList.remove('active');
+            $('changePasswordForm').reset();
+            $('changePasswordError').innerHTML = '';
+            openModal('changePasswordModal');
+        }
+
+        function copyFormLink() {
+            const url = window.location.href.split('#')[0] + '#form';
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('Link copiado!', 'success');
+            }).catch(() => {
+                showToast('Erro ao copiar. Link: ' + url, 'warning');
+            });
+        }
+
+        // ============================================================
+        // UPLOAD DE ARQUIVOS
+        // ============================================================
+        function setupFileUpload() {
+            const uploadArea = $('uploadArea');
+            const fileInput = $('fileInput');
+
+            if (!uploadArea || !fileInput) return;
+
+            uploadArea.onclick = () => fileInput.click();
+
+            uploadArea.ondragover = (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragging');
+            };
+
+            uploadArea.ondragleave = () => uploadArea.classList.remove('dragging');
+
+            uploadArea.ondrop = (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragging');
+                if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+            };
+
+            fileInput.onchange = (e) => {
+                if (e.target.files.length) handleFile(e.target.files[0]);
+            };
+        }
+
+        function handleFile(file) {
+            const name = file.name.toLowerCase();
+
+            if (name.endsWith('.csv')) {
+                const reader = new FileReader();
+                reader.onload = (e) => processData(parseCSV(e.target.result));
+                reader.readAsText(file, 'UTF-8');
+            } else {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    const sheet = wb.Sheets[wb.SheetNames[0]];
+                    processData(XLSX.utils.sheet_to_json(sheet));
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function parseCSV(text) {
+            text = text.replace(/^\uFEFF/, '');
+            const lines = text.split('\n').filter(l => l.trim());
+            if (lines.length < 2) return [];
+
+            const headers = lines[0].split(';').map(h => h.trim());
+            return lines.slice(1).map(line => {
+                const values = line.split(';');
+                const row = {};
+                headers.forEach((h, i) => row[h] = (values[i] || '').trim());
+                return row;
+            });
+        }
+
+        async function processData(data) {
+            showLoading();
+            let count = 0;
+
+            try {
+                for (const row of data) {
+                    const cidade = row.Cidade || row.cidade || row.CIDADE;
+                    const bairro = row.Bairro || row.Bairros || row.bairro || row.BAIRRO;
+                    const veiculo = row['Tipo de Veículo'] || row['Tipo Veiculo'] || row.Veiculo || row.veiculo || row.VEICULO;
+
+                    if (cidade && bairro && veiculo) {
+                        await saveRoute({ cidade: cidade.trim(), bairro: bairro.trim(), veiculo: veiculo.trim() });
+                        count++;
+                    }
+                }
+
+                $('fileInput').value = '';
+                showImportStatus(`✅ ${count} rotas importadas!`, 'success');
+            } catch (error) {
+                showImportStatus('❌ Erro: ' + error.message, 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showImportStatus(msg, type) {
+            const container = $('importStatus');
+            if (!container) return;
+            container.innerHTML = `<div class="alert alert-${type}" style="margin-top: 16px;">${msg}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        // ============================================================
+        // EXPORTAÇÃO
+        // ============================================================
+        function exportRoutesToExcel() {
+            if (!routes.length) return showToast('Nenhuma rota para exportar', 'warning');
+
+            const data = routes.map(r => ({
+                'Cidade': r.cidade,
+                'Bairro': r.bairro,
+                'Tipo de Veículo': r.veiculo
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Rotas');
+            XLSX.writeFile(wb, `rotas_${Date.now()}.xlsx`);
+        }
+
+        function exportDeliverersToExcel() {
+            if (!deliverers.length) return showToast('Nenhum entregador para exportar', 'warning');
+
+            const data = deliverers.map(d => ({
+                'Nome': d.name,
+                'Placa': d.vehicle_plate,
+                'Veículo': d.route_veiculo,
+                'Rota': `${d.route_cidade} - ${d.route_bairro}`,
+                'Data': new Date(d.created_at).toLocaleDateString('pt-BR')
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Entregadores');
+            XLSX.writeFile(wb, `entregadores_${Date.now()}.xlsx`);
+        }
+
+        async function generateDeliverersImage() {
+            if (!deliverers.length) return showToast('Nenhum entregador para gerar imagem', 'warning');
+
+            showLoading();
+
+            const container = document.createElement('div');
+            container.style.cssText = 'position:absolute;left:-9999px;background:white;padding:40px;width:1200px;font-family:DM Sans,sans-serif;';
+
+            container.innerHTML = `
+                <div style="text-align:center;margin-bottom:30px;">
+                    <h1 style="font-size:28px;color:#1e293b;">🚚 Shopee - Entregadores Cadastrados</h1>
+                    <p style="color:#64748b;">${new Date().toLocaleString('pt-BR')}</p>
+                </div>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f1f3f9;">
+                            <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;">#</th>
+                            <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;">Nome</th>
+                            <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;">Placa</th>
+                            <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;">Veículo</th>
+                            <th style="padding:12px;text-align:left;border-bottom:2px solid #e2e8f0;">Rota</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${deliverers.map((d, i) => `
+                            <tr style="background:${i % 2 ? '#f8f9fc' : '#fff'};">
+                                <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;">${i + 1}</td>
+                                <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;font-weight:600;">${d.name}</td>
+                                <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;"><span style="background:#dbeafe;color:#1e40af;padding:4px 10px;border-radius:6px;">${d.vehicle_plate}</span></td>
+                                <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;"><span style="background:#fef3c7;color:#92400e;padding:4px 10px;border-radius:6px;">${d.route_veiculo}</span></td>
+                                <td style="padding:10px 12px;border-bottom:1px solid #e2e8f0;"><span style="background:#d1fae5;color:#059669;padding:4px 10px;border-radius:6px;">${d.route_cidade} - ${d.route_bairro}</span></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <p style="text-align:center;margin-top:20px;color:#64748b;">Total: <strong>${deliverers.length}</strong> entregadores</p>
+            `;
+
+            document.body.appendChild(container);
+
+            try {
+                const canvas = await html2canvas(container, { backgroundColor: '#fff', scale: 2 });
+                document.body.removeChild(container);
+
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `entregadores_${Date.now()}.png`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    hideLoading();
+                    showToast('Imagem gerada!', 'success');
+                });
+            } catch (error) {
+                document.body.removeChild(container);
+                hideLoading();
+                showToast('Erro ao gerar imagem', 'danger');
+            }
+        }
+
+        // ============================================================
+        // FORMULÁRIOS
+        // ============================================================
+        $('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            showLoading();
+
+            const email = $('loginEmail').value.trim();
+            const password = $('loginPassword').value;
+
+            try {
+                currentUser = await loginWithEmail(email, password);
+                $('loginError').innerHTML = '';
+                $('currentUsername').textContent = currentUser.email.split('@')[0];
+
+                $('loginScreen').style.display = 'none';
+                $('mainApp').style.display = 'block';
+                $('formControlInline').style.display = 'flex';
+
+                await loadAllData();
+                setupRealtime();
+                updateFormControlUI();
+
+                showToast('Login realizado!', 'success');
+            } catch (error) {
+                $('loginError').innerHTML = `<div class="alert alert-danger" style="margin-top:16px;">❌ ${error.message}</div>`;
+            } finally {
+                hideLoading();
+            }
+        };
+
+        $('delivererForm').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const selectedRadio = document.querySelector('input[name="selectedRoute"]:checked');
+            if (!selectedRadio) {
+                return showToast('Selecione uma rota!', 'warning');
+            }
+
+            showLoading();
+
+            const name = $('delivererName').value.trim();
+            const plate = $('vehiclePlate').value.trim().toUpperCase();
+            const routeId = selectedRadio.value;
+            const cidade = selectedRadio.dataset.cidade;
+            const bairro = selectedRadio.dataset.bairro;
+            const veiculo = selectedRadio.dataset.veiculo;
+
+            try {
+                // Verificar se placa já existe
+                const existingPlate = deliverers.find(d => d.vehicle_plate === plate);
+                if (existingPlate) {
+                    throw new Error('Esta placa já possui uma rota cadastrada!');
+                }
+
+                // Verificar se rota ainda está disponível
+                const routeTaken = deliverers.find(d => d.route_id === routeId);
+                if (routeTaken) {
+                    throw new Error('Esta rota já foi escolhida por outro entregador!');
+                }
+
+                await saveDeliverer({
+                    name,
+                    vehicle_plate: plate,
+                    route_id: routeId,
+                    route_cidade: cidade,
+                    route_bairro: bairro,
+                    route_veiculo: veiculo
+                });
+
+                $('delivererForm').reset();
+                document.querySelectorAll('.route-item').forEach(i => i.classList.remove('selected'));
+                openModal('successModal');
+            } catch (error) {
+                showToast(error.message, 'danger');
+            } finally {
+                hideLoading();
+            }
+        };
+
+        $('changePasswordForm').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const newPass = $('newPassword').value;
+            const confirmPass = $('confirmPassword').value;
+
+            if (newPass !== confirmPass) {
+                $('changePasswordError').innerHTML = '<div class="alert alert-danger" style="margin-top:16px;">Senhas não coincidem!</div>';
+                return;
+            }
+
+            showLoading();
+            try {
+                await changePassword(newPass);
+                closeModal('changePasswordModal');
+                showToast('Senha alterada!', 'success');
+            } catch (error) {
+                $('changePasswordError').innerHTML = `<div class="alert alert-danger" style="margin-top:16px;">${error.message}</div>`;
+            } finally {
+                hideLoading();
+            }
+        };
+
+        async function handleLogout() {
+            showConfirm('Sair', 'Deseja realmente sair?', async () => {
+                showLoading();
+                await logout();
+                hideLoading();
+                currentUser = null;
+                $('loginScreen').style.display = 'flex';
+                $('mainApp').style.display = 'none';
+                $('loginEmail').value = '';
+                $('loginPassword').value = '';
+            });
+        }
+
+        // ============================================================
+        // INICIALIZAÇÃO
+        // ============================================================
+        async function loadAllData() {
+            await Promise.all([loadRoutes(), loadDeliverers(), loadSettings()]);
+            updateStats();
+            renderRoutesTable();
+            renderDeliverersTable();
+            renderFormRoutes();
+        }
+
+        async function init() {
+            showLoading();
+
+            const isPublicForm = window.location.hash === '#form';
+
+            try {
+                if (isPublicForm) {
+                    // Modo público (formulário)
+                    $('loginScreen').style.display = 'none';
+                    $('mainApp').style.display = 'block';
+                    $('appHeader').style.display = 'none';
+                    document.body.classList.add('public-mode');
+
+                    await loadAllData();
+                    setupRealtime();
+
+                    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                    $('formView').classList.add('active');
+                    applyFormAvailability();
+                } else {
+                    // Verificar sessão
+                    currentUser = await checkSession();
+
+                    if (currentUser) {
+                        $('loginScreen').style.display = 'none';
+                        $('mainApp').style.display = 'block';
+                        $('formControlInline').style.display = 'flex';
+                        $('currentUsername').textContent = currentUser.email.split('@')[0];
+
+                        await loadAllData();
+                        setupRealtime();
+                        updateFormControlUI();
+                    } else {
+                        $('loginScreen').style.display = 'flex';
+                        $('mainApp').style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Erro na inicialização:', error);
+                showToast('Erro ao carregar dados', 'danger');
+            } finally {
+                hideLoading();
+            }
+
+            setupFileUpload();
+        }
+
+        // Verificar horário do formulário periodicamente
+        setInterval(() => {
+            if (window.location.hash === '#form' || document.querySelector('#formView.active')) {
+                applyFormAvailability();
+            }
+            if (currentUser) {
+                updateFormControlUI();
+            }
+        }, 60000); // A cada minuto
+
+        // Iniciar
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Hash change
+        window.addEventListener('hashchange', () => {
+            if (window.location.hash === '#form') {
+                location.reload();
+            }
+        });
+    </script>
+</body>
+</html>
