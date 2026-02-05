@@ -1165,12 +1165,12 @@
         // ============================================================
         // ⚠️ CONFIGURAÇÃO DO SUPABASE - SUBSTITUA PELOS SEUS VALORES!
         // ============================================================
-        const SUPABASE_URL = 'https://sqmereekfdphvnprnnxx.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxbWVyZWVrZmRwaHZucHJubnh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyNTY5NDUsImV4cCI6MjA4NTgzMjk0NX0.x3-Xx9KpNJp9eMu533Ww-Pv7TaxmJqaXrvVcEVHa3CQ';
+        const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.SUA-KEY-AQUI';
         // ============================================================
 
         // Inicializar Supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // ============================================================
         // ESTADO GLOBAL
@@ -1243,7 +1243,7 @@
         
         // ROTAS
         async function loadRoutes() {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('routes')
                 .select('*')
                 .order('created_at', { ascending: false });
@@ -1257,7 +1257,7 @@
         }
 
         async function saveRoute(route) {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('routes')
                 .insert([route])
                 .select()
@@ -1268,7 +1268,7 @@
         }
 
         async function deleteRouteById(id) {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('routes')
                 .delete()
                 .eq('id', id);
@@ -1277,7 +1277,7 @@
         }
 
         async function clearAllRoutes() {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('routes')
                 .delete()
                 .neq('id', '00000000-0000-0000-0000-000000000000');
@@ -1287,7 +1287,7 @@
 
         // ENTREGADORES
         async function loadDeliverers() {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('deliverers')
                 .select('*')
                 .order('created_at', { ascending: false });
@@ -1301,7 +1301,7 @@
         }
 
         async function saveDeliverer(deliverer) {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('deliverers')
                 .insert([deliverer])
                 .select()
@@ -1312,7 +1312,7 @@
         }
 
         async function deleteDelivererById(id) {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('deliverers')
                 .delete()
                 .eq('id', id);
@@ -1321,7 +1321,7 @@
         }
 
         async function clearAllDeliverers() {
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from('deliverers')
                 .delete()
                 .neq('id', '00000000-0000-0000-0000-000000000000');
@@ -1331,7 +1331,7 @@
 
         // CONFIGURAÇÕES
         async function loadSettings() {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('settings')
                 .select('*')
                 .eq('id', 1)
@@ -1344,7 +1344,7 @@
         }
 
         async function updateSettings(newSettings) {
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('settings')
                 .upsert([{ id: 1, ...newSettings }])
                 .select()
@@ -1360,7 +1360,7 @@
         // ============================================================
         function setupRealtime() {
             if (realtimeChannel) {
-                supabase.removeChannel(realtimeChannel);
+                supabaseClient.removeChannel(realtimeChannel);
             }
 
             realtimeChannel = supabase
@@ -1436,12 +1436,12 @@
         // AUTENTICAÇÃO
         // ============================================================
         async function checkSession() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             return session?.user || null;
         }
 
         async function loginWithEmail(email, password) {
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
                 email, password
             });
             if (error) throw error;
@@ -1449,15 +1449,15 @@
         }
 
         async function logout() {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
             currentUser = null;
             if (realtimeChannel) {
-                supabase.removeChannel(realtimeChannel);
+                supabaseClient.removeChannel(realtimeChannel);
             }
         }
 
         async function changePassword(newPassword) {
-            const { error } = await supabase.auth.updateUser({ password: newPassword });
+            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
             if (error) throw error;
         }
 
