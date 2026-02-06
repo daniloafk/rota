@@ -2419,16 +2419,14 @@
             }
             lastScheduleState = currentScheduleState;
             
-            // Aplica disponibilidade do formulário
-            if (isPublic || isAdmin) {
-                const wasOpen = lastFormState;
-                const isNowOpen = isFormOpen();
+            const wasOpen = lastFormState;
+            const isNowOpen = isFormOpen();
+            
+            // Aplica disponibilidade do formulário público
+            if (isPublic) {
+                applyFormAvailability();
                 
-                if (isPublic) {
-                    applyFormAvailability();
-                }
-                
-                // Notificar se mudou de estado
+                // Notificar mudança APENAS no formulário público
                 if (lastFormState !== null && wasOpen !== isNowOpen) {
                     if (isNowOpen) {
                         showToast('🟢 Formulário ABERTO!', 'success');
@@ -2436,12 +2434,13 @@
                         showToast('🔴 Formulário FECHADO!', 'warning');
                     }
                 }
-                
-                lastFormState = isNowOpen;
-                
-                if (isAdmin) {
-                    updateFormControlUI();
-                }
+            }
+            
+            lastFormState = isNowOpen;
+            
+            // Atualiza UI do admin (sem toast)
+            if (isAdmin) {
+                updateFormControlUI();
             }
         }, 5000); // A cada 5 segundos
 
