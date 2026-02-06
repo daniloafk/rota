@@ -1723,7 +1723,8 @@
             const filtered = routes.filter(r =>
                 (r.at_id || '').toLowerCase().includes(search) ||
                 r.cidade.toLowerCase().includes(search) ||
-                r.bairro.toLowerCase().includes(search)
+                r.bairro.toLowerCase().includes(search) ||
+                (r.gaiola || '').toLowerCase().includes(search)
             );
 
             const occupiedIds = new Set(deliverers.map(d => d.route_id));
@@ -1737,6 +1738,7 @@
                                 <th>Cidade</th>
                                 <th>Bairro</th>
                                 <th>Veículo</th>
+                                <th>Gaiola</th>
                                 <th>Status</th>
                                 <th>Ações</th>
                             </tr>
@@ -1750,6 +1752,7 @@
                                         <td><strong>${r.cidade}</strong></td>
                                         <td>${r.bairro}</td>
                                         <td><span class="badge" style="${getVehicleBadgeStyle(r.veiculo)}">${r.veiculo}</span></td>
+                                        <td><code style="font-size: 11px; background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px;">${r.gaiola || '-'}</code></td>
                                         <td><span class="badge ${occupied ? 'badge-warning' : 'badge-success'}">${occupied ? '🔒 Ocupada' : '✅ Livre'}</span></td>
                                         <td><button class="btn-icon" onclick="confirmDeleteRoute('${r.id}')">🗑️</button></td>
                                     </tr>
@@ -1779,7 +1782,8 @@
             const filtered = deliverers.filter(d =>
                 d.name.toLowerCase().includes(search) ||
                 d.vehicle_plate.toLowerCase().includes(search) ||
-                (d.route_at_id || '').toLowerCase().includes(search)
+                (d.route_at_id || '').toLowerCase().includes(search) ||
+                (d.route_gaiola || '').toLowerCase().includes(search)
             );
 
             container.innerHTML = `
@@ -1790,6 +1794,7 @@
                                 <th>AT ID</th>
                                 <th>Nome</th>
                                 <th>Placa / Veículo</th>
+                                <th>Gaiola</th>
                                 <th>Rota</th>
                                 <th>Data</th>
                                 <th>Ações</th>
@@ -1804,6 +1809,7 @@
                                         <span class="badge badge-info">${d.vehicle_plate}</span>
                                         <span class="badge" style="margin-left: 4px; ${getVehicleBadgeStyle(d.route_veiculo)}">${d.route_veiculo}</span>
                                     </td>
+                                    <td><code style="font-size: 11px; background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px;">${d.route_gaiola || '-'}</code></td>
                                     <td><span class="badge badge-success">${d.route_cidade} - ${d.route_bairro}</span></td>
                                     <td>${new Date(d.created_at).toLocaleDateString('pt-BR')}</td>
                                     <td><button class="btn-icon" onclick="confirmDeleteDeliverer('${d.id}')">🗑️</button></td>
@@ -1913,7 +1919,7 @@
                 container.innerHTML = filtered.map(r => `
                     <div class="route-item" data-id="${r.id}">
                         <input type="radio" class="route-checkbox" name="selectedRoute" value="${r.id}"
-                            data-atid="${r.at_id || ''}" data-cidade="${r.cidade}" data-bairro="${r.bairro}" data-veiculo="${r.veiculo}">
+                            data-atid="${r.at_id || ''}" data-cidade="${r.cidade}" data-bairro="${r.bairro}" data-veiculo="${r.veiculo}" data-gaiola="${r.gaiola || ''}">
                         <div class="route-info">
                             <div class="route-location">📍 ${r.cidade} - ${r.bairro}</div>
                             <div class="route-details">🚗 ${r.veiculo}</div>
@@ -2113,13 +2119,15 @@
                     const cidade = row.Cidade || row.cidade || row.CIDADE;
                     const bairro = row.Bairro || row.Bairros || row.bairro || row.BAIRRO;
                     const veiculo = row['Tipo de Veículo'] || row['Tipo Veiculo'] || row['Tipo Veículo'] || row.Veiculo || row.veiculo || row.VEICULO;
+                    const gaiola = row.Gaiola || row.gaiola || row.GAIOLA || '';
 
                     if (cidade && bairro && veiculo) {
                         await saveRoute({ 
                             at_id: at_id.toString().trim() || null,
                             cidade: cidade.trim(), 
                             bairro: bairro.trim(), 
-                            veiculo: veiculo.trim() 
+                            veiculo: veiculo.trim(),
+                            gaiola: gaiola.toString().trim() || null
                         });
                         count++;
                     }
@@ -2151,7 +2159,8 @@
                 'AT ID': r.at_id || '',
                 'Cidade': r.cidade,
                 'Bairro': r.bairro,
-                'Tipo de Veículo': r.veiculo
+                'Tipo de Veículo': r.veiculo,
+                'Gaiola': r.gaiola || ''
             }));
 
             const ws = XLSX.utils.json_to_sheet(data);
@@ -2168,6 +2177,7 @@
                 'Nome': d.name,
                 'Placa': d.vehicle_plate,
                 'Veículo': d.route_veiculo,
+                'Gaiola': d.route_gaiola || '',
                 'Cidade': d.route_cidade,
                 'Bairro': d.route_bairro,
                 'Data': new Date(d.created_at).toLocaleDateString('pt-BR')
@@ -2288,6 +2298,7 @@
             const cidade = selectedRadio.dataset.cidade;
             const bairro = selectedRadio.dataset.bairro;
             const veiculo = selectedRadio.dataset.veiculo;
+            const gaiola = selectedRadio.dataset.gaiola || null;
 
             try {
                 await saveDeliverer({
@@ -2297,7 +2308,8 @@
                     route_at_id: atId,
                     route_cidade: cidade,
                     route_bairro: bairro,
-                    route_veiculo: veiculo
+                    route_veiculo: veiculo,
+                    route_gaiola: gaiola
                 });
 
                 $('delivererForm').reset();
