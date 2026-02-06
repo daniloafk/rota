@@ -2397,15 +2397,12 @@
             setupFileUpload();
         }
 
-        // Verificar horário do formulário periodicamente (a cada 30 segundos)
+        // Verificar horário do formulário periodicamente (a cada 5 segundos)
         let lastFormState = null;
         
         setInterval(async () => {
             const isPublic = window.location.hash === '#form' || document.querySelector('#formView.active');
             const isAdmin = currentUser !== null;
-            
-            // Recarrega as settings do banco para pegar mudanças
-            await loadSettings();
             
             // Verifica se entrou no horário para resetar manual_override
             const currentScheduleState = isWithinSchedule();
@@ -2423,39 +2420,30 @@
             lastScheduleState = currentScheduleState;
             
             // Aplica disponibilidade do formulário
-            if (isPublic) {
+            if (isPublic || isAdmin) {
                 const wasOpen = lastFormState;
                 const isNowOpen = isFormOpen();
                 
-                applyFormAvailability();
+                if (isPublic) {
+                    applyFormAvailability();
+                }
                 
                 // Notificar se mudou de estado
                 if (lastFormState !== null && wasOpen !== isNowOpen) {
                     if (isNowOpen) {
-                        showToast('🟢 Formulário ABERTO! Você já pode se cadastrar.', 'success');
+                        showToast('🟢 Formulário ABERTO!', 'success');
                     } else {
-                        showToast('🔴 Formulário FECHADO! Aguarde o horário de liberação.', 'warning');
+                        showToast('🔴 Formulário FECHADO!', 'warning');
                     }
                 }
                 
                 lastFormState = isNowOpen;
                 
-                // Log para debug
-                console.log('⏰ Verificação:', {
-                    hora_atual: new Date().toTimeString().slice(0, 5),
-                    form_enabled: settings.form_enabled,
-                    open_time: settings.open_time,
-                    close_time: settings.close_time,
-                    manual_override: settings.manual_override,
-                    dentro_horario: currentScheduleState,
-                    formulario_aberto: isNowOpen
-                });
+                if (isAdmin) {
+                    updateFormControlUI();
+                }
             }
-            
-            if (isAdmin) {
-                updateFormControlUI();
-            }
-        }, 30000); // A cada 30 segundos
+        }, 5000); // A cada 5 segundos
 
         // Iniciar
         document.addEventListener('DOMContentLoaded', init);
