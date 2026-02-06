@@ -1182,6 +1182,7 @@
         let settings = { form_enabled: true, open_time: null, close_time: null, manual_override: false };
         let realtimeChannel = null;
         let lastScheduleState = null; // Para detectar mudança de horário
+        let lastToastTime = 0; // Para evitar toasts duplicados
 
         // ============================================================
         // HELPERS
@@ -1441,9 +1442,11 @@
                 updateFormControlUI();
                 applyFormAvailability();
                 
-                // Toast apenas no formulário público e só quando estado muda
+                // Toast apenas no formulário público, só quando estado muda, e evita duplicação
                 const isPublic = window.location.hash === '#form' || !currentUser;
-                if (isPublic && wasOpen !== isNowOpen) {
+                const now = Date.now();
+                if (isPublic && wasOpen !== isNowOpen && (now - lastToastTime > 3000)) {
+                    lastToastTime = now;
                     if (isNowOpen) {
                         showToast('🟢 Formulário ABERTO!', 'success');
                     } else {
@@ -2424,8 +2427,10 @@
             if (isPublic) {
                 applyFormAvailability();
                 
-                // Toast para mudanças por HORÁRIO (não capturadas pelo Realtime)
-                if (lastFormState !== null && wasOpen !== isNowOpen) {
+                // Toast para mudanças por HORÁRIO - com proteção anti-duplicação
+                const now = Date.now();
+                if (lastFormState !== null && wasOpen !== isNowOpen && (now - lastToastTime > 3000)) {
+                    lastToastTime = now;
                     if (isNowOpen) {
                         showToast('🟢 Formulário ABERTO!', 'success');
                     } else {
