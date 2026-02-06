@@ -919,207 +919,191 @@
 
             .login-card { padding: 32px 24px; }
 
-            /* FORMULÁRIO PÚBLICO MOBILE */
-            .form-mode {
+            /* FORMULÁRIO PÚBLICO MOBILE - ALTURA FIXA */
+            html.form-mode,
+            body.form-mode {
+                height: 100vh !important;
                 overflow: hidden !important;
+                position: fixed !important;
+                width: 100% !important;
             }
 
+            .form-mode #mainApp,
+            .form-mode main,
             .form-mode .container {
+                height: 100vh !important;
+                overflow: hidden !important;
                 padding: 0 !important;
                 margin: 0 !important;
                 max-width: 100% !important;
             }
 
             #formView {
-                height: 100vh;
-                width: 100%;
-                overflow: hidden;
+                height: 100vh !important;
+                overflow: hidden !important;
+                padding: 0 !important;
             }
 
             #formView .form-public-card {
-                max-width: 100%;
-                width: 100%;
-                height: 100vh;
-                margin: 0;
-                padding: 12px;
-                border-radius: 0;
-                box-shadow: none;
-                display: flex;
-                flex-direction: column;
+                height: 100vh !important;
+                max-height: 100vh !important;
+                overflow: hidden !important;
+                margin: 0 !important;
+                padding: 12px !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                box-sizing: border-box !important;
             }
 
+            /* Título */
             #formView .card-header {
-                padding: 0 0 8px 0;
-                margin: 0 0 8px 0;
-                flex-shrink: 0;
+                padding: 0 0 6px 0 !important;
+                margin: 0 0 6px 0 !important;
             }
 
             #formView .card-title {
-                font-size: 18px;
-                margin: 0;
+                font-size: 18px !important;
+                margin: 0 !important;
             }
 
             #formView .card-subtitle {
-                font-size: 12px;
-                margin: 4px 0 0 0;
+                font-size: 11px !important;
+                margin: 2px 0 0 0 !important;
             }
 
-            #formView #formClosedBanner {
-                flex-shrink: 0;
-                margin-bottom: 8px;
-            }
-
-            #formView #delivererForm {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                min-height: 0;
-                overflow: hidden;
-            }
-
+            /* Inputs */
             #formView .form-group {
-                flex-shrink: 0;
-                margin-bottom: 8px;
+                margin-bottom: 6px !important;
             }
 
             #formView .form-label {
-                font-size: 14px;
-                margin-bottom: 4px;
+                font-size: 13px !important;
+                margin-bottom: 3px !important;
             }
 
             #formView .form-input {
-                padding: 10px 12px;
-                font-size: 16px;
+                padding: 8px 10px !important;
+                font-size: 16px !important;
             }
 
+            /* Filtros */
             #formView .filter-section {
-                margin-bottom: 6px;
+                margin-bottom: 4px !important;
             }
 
             #formView .filter-section > label {
-                font-size: 12px !important;
+                font-size: 11px !important;
             }
 
-            /* ÁREA DAS ROTAS - CRESCE E TEM SCROLL */
-            #formView .routes-form-group {
-                flex: 1 !important;
-                min-height: 0 !important;
-                overflow: hidden !important;
-                display: flex !important;
-                flex-direction: column !important;
-                margin-bottom: 0 !important;
-            }
-
-            #formView .routes-form-group > .form-label {
-                flex-shrink: 0;
-            }
-
+            /* Lista de rotas - ALTURA FIXA CALCULADA */
             #formView .routes-grid {
-                flex: 1;
+                height: calc(100vh - 320px) !important;
+                max-height: calc(100vh - 320px) !important;
                 overflow-y: auto !important;
-                -webkit-overflow-scrolling: touch;
-                min-height: 0;
-                max-height: none;
-                gap: 6px;
-                padding-right: 4px;
+                -webkit-overflow-scrolling: touch !important;
+                gap: 6px !important;
             }
 
             #formView .route-item {
-                padding: 10px 12px;
-                border-radius: 8px;
-                gap: 8px;
+                padding: 10px !important;
+                border-radius: 8px !important;
             }
 
             #formView .route-location {
-                font-size: 14px;
+                font-size: 14px !important;
             }
 
             #formView .route-details {
-                font-size: 12px;
+                font-size: 11px !important;
             }
 
             #formView .route-checkbox {
-                width: 18px;
-                height: 18px;
+                width: 18px !important;
+                height: 18px !important;
             }
 
-            /* BOTÃO CONFIRMAR - SEMPRE VISÍVEL */
+            /* Botão */
             #formView .modal-actions {
-                flex-shrink: 0 !important;
-                margin: 8px 0 0 0;
-                padding: 8px 0 0 0;
-                border-top: 1px solid var(--border-color);
+                margin: 8px 0 0 0 !important;
+                padding: 8px 0 0 0 !important;
             }
 
             #formView .modal-actions .btn {
                 width: 100% !important;
-                padding: 12px 20px;
-                font-size: 15px;
+                padding: 12px !important;
+                font-size: 15px !important;
+            }
+
+            #formView #formClosedBanner {
+                padding: 8px !important;
+                font-size: 12px !important;
+                margin-bottom: 6px !important;
             }
         }
 
         /* Celulares pequenos */
         @media (max-width: 480px) {
             #formView .form-public-card {
-                padding: 10px;
+                padding: 10px !important;
             }
 
             #formView .card-title {
-                font-size: 16px;
+                font-size: 16px !important;
             }
 
-            #formView .card-subtitle {
-                font-size: 11px;
-            }
-
-            #formView .form-input {
-                padding: 8px 10px;
-                font-size: 15px;
+            #formView .routes-grid {
+                height: calc(100vh - 300px) !important;
+                max-height: calc(100vh - 300px) !important;
             }
 
             #formView .route-item {
-                padding: 8px 10px;
+                padding: 8px !important;
             }
 
             #formView .route-location {
-                font-size: 13px;
-            }
-
-            #formView .route-details {
-                font-size: 11px;
+                font-size: 13px !important;
             }
 
             #formView .modal-actions .btn {
-                padding: 10px 16px;
-                font-size: 14px;
+                padding: 10px !important;
+                font-size: 14px !important;
             }
         }
 
         /* Celulares muito pequenos */
         @media (max-width: 360px) {
             #formView .form-public-card {
-                padding: 8px;
+                padding: 8px !important;
             }
 
             #formView .card-title {
-                font-size: 15px;
+                font-size: 15px !important;
+            }
+
+            #formView .card-subtitle {
+                display: none !important;
+            }
+
+            #formView .routes-grid {
+                height: calc(100vh - 270px) !important;
+                max-height: calc(100vh - 270px) !important;
             }
 
             #formView .form-input {
-                padding: 7px 8px;
-                font-size: 14px;
+                padding: 6px 8px !important;
+                font-size: 14px !important;
             }
 
             #formView .route-item {
-                padding: 6px 8px;
+                padding: 6px !important;
             }
 
             #formView .route-location {
-                font-size: 12px;
+                font-size: 12px !important;
             }
 
             #formView .route-details {
-                font-size: 10px;
+                font-size: 10px !important;
             }
         }
 
@@ -2730,6 +2714,7 @@
                     $('loginScreen').style.display = 'none';
                     $('mainApp').style.display = 'block';
                     $('appHeader').style.display = 'none';
+                    document.documentElement.classList.add('form-mode');
                     document.body.classList.add('public-mode', 'form-mode');
 
                     await loadAllData();
