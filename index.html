@@ -159,6 +159,17 @@
             padding: 32px 24px;
         }
 
+        /* Container sem padding para formView em mobile */
+        @media (max-width: 768px) {
+            body:has(#formView.active) .container {
+                padding: 0;
+            }
+            
+            body:has(#formView.active) {
+                overflow: hidden;
+            }
+        }
+
         .view {
             display: none;
             animation: fadeIn 0.3s ease;
@@ -901,8 +912,17 @@
             .routes-grid { max-height: 300px; }
 
             /* Otimizações do formulário público para mobile */
+            #formView {
+                padding: 0;
+            }
+
             #formView .card {
                 padding: 12px;
+                margin-bottom: 0;
+                border-radius: 0;
+                min-height: calc(100vh - 60px);
+                display: flex;
+                flex-direction: column;
             }
 
             #formView .card-header {
@@ -962,17 +982,22 @@
             }
 
             #formView .routes-grid {
-                max-height: 35vh;
+                flex: 1;
+                max-height: none;
+                min-height: 120px;
                 gap: 6px;
+                overflow-y: auto;
             }
 
             #formView .modal-actions {
                 margin-top: 10px;
+                padding-top: 10px;
             }
 
             #formView .modal-actions .btn {
                 padding: 10px 16px;
                 font-size: 13px;
+                width: 100%;
             }
 
             #formView #formClosedBanner {
@@ -983,13 +1008,18 @@
             #formView #formClosedBanner span {
                 font-size: 16px;
             }
+
+            /* Container sem padding no formView */
+            #formView + .container,
+            .container:has(#formView) {
+                padding: 0;
+            }
         }
 
         /* Celulares pequenos - otimização extra */
         @media (max-width: 480px) {
             #formView .card {
                 padding: 10px;
-                border-radius: 10px;
             }
 
             #formView .card-header {
@@ -1044,8 +1074,8 @@
             }
 
             #formView .routes-grid {
-                max-height: 30vh;
                 gap: 4px;
+                min-height: 100px;
             }
 
             #formView .modal-actions {
@@ -1094,8 +1124,8 @@
             }
 
             #formView .routes-grid {
-                max-height: 28vh;
                 gap: 3px;
+                min-height: 80px;
             }
 
             #formView .modal-actions .btn {
@@ -1117,10 +1147,6 @@
 
             #formView .form-group {
                 margin-bottom: 4px;
-            }
-
-            #formView .routes-grid {
-                max-height: 25vh;
             }
 
             #formView .filter-section {
