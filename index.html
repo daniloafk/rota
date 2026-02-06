@@ -161,13 +161,21 @@
 
         /* Container sem padding para formView em mobile */
         @media (max-width: 768px) {
+            .form-mode {
+                overflow: hidden;
+                height: 100vh;
+                position: fixed;
+                width: 100%;
+            }
+            
             .form-mode .container {
                 padding: 0;
                 height: 100vh;
                 overflow: hidden;
             }
-            
-            .form-mode {
+
+            .form-mode main {
+                height: 100vh;
                 overflow: hidden;
             }
         }
@@ -919,6 +927,11 @@
                 overflow: hidden;
             }
 
+            #formView .form-public-card {
+                max-width: none;
+                margin: 0;
+            }
+
             #formView .card {
                 padding: 16px;
                 margin: 0;
@@ -1403,7 +1416,7 @@
 
             <!-- Form View (Public) -->
             <div id="formView" class="view">
-                <div class="card form-public-card" style="max-width: 900px; margin: 0 auto;">
+                <div class="card form-public-card">
                     <div class="card-header">
                         <h2 class="card-title">📝 Cadastro de Entregador</h2>
                         <p class="card-subtitle">Preencha seus dados e escolha uma rota disponível</p>
