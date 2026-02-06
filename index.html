@@ -1498,41 +1498,33 @@
         function isFormOpen() {
             const { form_enabled, open_time, close_time } = settings;
             
-            // Se form_enabled = false (desabilitado manual), SEMPRE fechado
-            if (!form_enabled) {
-                return false;
-            }
-            
-            // Se form_enabled = true, verifica horários
-            // Se não tem horários configurados, está aberto
-            if (!open_time && !close_time) {
-                return true;
-            }
-            
-            // Se tem horários, calcula se está dentro da janela
-            const now = new Date();
-            const currentTime = now.toTimeString().slice(0, 5); // HH:MM
-            
-            // Apenas horário de ABRIR definido
-            if (open_time && !close_time) {
-                return currentTime >= open_time;
-            }
-            // Apenas horário de FECHAR definido
-            else if (!open_time && close_time) {
-                return currentTime < close_time;
-            }
-            // Ambos horários definidos
-            else if (open_time && close_time) {
-                if (open_time <= close_time) {
-                    // Janela normal (ex: 08:00 - 18:00)
-                    return currentTime >= open_time && currentTime < close_time;
-                } else {
-                    // Janela atravessando meia-noite (ex: 22:00 - 06:00)
-                    return currentTime >= open_time || currentTime < close_time;
+            // Se tem horários configurados, eles têm PRIORIDADE
+            if (open_time || close_time) {
+                const now = new Date();
+                const currentTime = now.toTimeString().slice(0, 5); // HH:MM
+                
+                // Apenas horário de ABRIR definido
+                if (open_time && !close_time) {
+                    return currentTime >= open_time;
+                }
+                // Apenas horário de FECHAR definido
+                else if (!open_time && close_time) {
+                    return currentTime < close_time;
+                }
+                // Ambos horários definidos
+                else if (open_time && close_time) {
+                    if (open_time <= close_time) {
+                        // Janela normal (ex: 08:00 - 18:00)
+                        return currentTime >= open_time && currentTime < close_time;
+                    } else {
+                        // Janela atravessando meia-noite (ex: 22:00 - 06:00)
+                        return currentTime >= open_time || currentTime < close_time;
+                    }
                 }
             }
             
-            return true;
+            // Sem horários = usa form_enabled (controle manual)
+            return form_enabled;
         }
 
         function updateFormControlUI() {
