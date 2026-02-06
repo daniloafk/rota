@@ -1428,30 +1428,10 @@
         }
 
         function handleSettingsChange(payload) {
-            console.log('🔔 Settings alteradas via Realtime:', payload);
-            
             if (payload.new) {
-                const oldFormEnabled = settings.form_enabled;
                 settings = payload.new;
-                
-                console.log('📊 Configurações atualizadas:', {
-                    form_enabled: settings.form_enabled,
-                    open_time: settings.open_time,
-                    close_time: settings.close_time
-                });
-                
                 updateFormControlUI();
                 applyFormAvailability();
-                
-                // Notificar mudança no formulário público APENAS se form_enabled mudou
-                const isPublic = window.location.hash === '#form' || document.querySelector('#formView.active');
-                if (isPublic && oldFormEnabled !== settings.form_enabled) {
-                    if (settings.form_enabled) {
-                        showToast('🟢 Formulário ABERTO!', 'success');
-                    } else {
-                        showToast('🔴 Formulário FECHADO!', 'warning');
-                    }
-                }
             }
         }
 
