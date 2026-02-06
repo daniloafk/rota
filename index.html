@@ -1332,14 +1332,25 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">📤 Importar Rotas</h2>
-                        <p class="card-subtitle">Envie uma planilha Excel ou CSV com: Cidade, Bairro, Tipo de Veículo</p>
+                        <p class="card-subtitle">Envie uma planilha Excel ou CSV</p>
                     </div>
 
-                    <div class="upload-area" id="uploadArea">
-                        <div class="upload-icon">📊</div>
-                        <div class="upload-text">Clique ou arraste a planilha aqui</div>
-                        <div class="upload-hint">Formatos aceitos: .xlsx, .xls, .csv</div>
-                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <!-- Importação Padrão -->
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">📊</div>
+                            <div class="upload-text">Planilha Padrão</div>
+                            <div class="upload-hint">Colunas: AT ID, Cidade, Bairro, Tipo Veículo, Gaiola, AM/PM</div>
+                            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+                        </div>
+
+                        <!-- Importação Personalizada -->
+                        <div class="upload-area" id="uploadAreaCustom" style="border-color: #8b5cf6;">
+                            <div class="upload-icon">🔧</div>
+                            <div class="upload-text">Planilha Personalizada</div>
+                            <div class="upload-hint">Mapeie as colunas manualmente</div>
+                            <input type="file" id="fileInputCustom" accept=".xlsx,.xls,.csv" style="display: none;">
+                        </div>
                     </div>
 
                     <div id="importStatus"></div>
@@ -1482,6 +1493,67 @@
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="closeModal('confirmModal')" style="width: auto;">Cancelar</button>
                 <button class="btn btn-danger" id="confirmBtn" style="width: auto;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Mapeamento de Colunas -->
+    <div class="modal" id="columnMappingModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">🔧 Mapear Colunas</h3>
+                <p style="color: var(--text-secondary); font-size: 13px; margin-top: 4px;">
+                    Selecione qual coluna da sua planilha corresponde a cada campo do sistema
+                </p>
+            </div>
+            
+            <div id="columnMappingContent">
+                <div class="form-group">
+                    <label class="form-label">AT ID</label>
+                    <select class="form-input" id="mapAtId">
+                        <option value="">-- Não importar --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">Cidade</label>
+                    <select class="form-input" id="mapCidade" required>
+                        <option value="">-- Selecione --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">Bairro</label>
+                    <select class="form-input" id="mapBairro" required>
+                        <option value="">-- Selecione --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">Tipo de Veículo</label>
+                    <select class="form-input" id="mapVeiculo" required>
+                        <option value="">-- Selecione --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Gaiola</label>
+                    <select class="form-input" id="mapGaiola">
+                        <option value="">-- Não importar --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">AM/PM (Turno)</label>
+                    <select class="form-input" id="mapTurno">
+                        <option value="">-- Não importar --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="previewData" style="margin-top: 16px; display: none;">
+                <label class="form-label">📋 Pré-visualização (primeiras 3 linhas):</label>
+                <div id="previewTable" style="overflow-x: auto; max-height: 150px; background: var(--bg-tertiary); border-radius: 8px; padding: 8px;"></div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('columnMappingModal')" style="width: auto;">Cancelar</button>
+                <button class="btn btn-primary" onclick="processCustomImport()" style="width: auto;">✅ Importar</button>
             </div>
         </div>
     </div>
@@ -2386,12 +2458,18 @@
         // ============================================================
         // UPLOAD DE ARQUIVOS
         // ============================================================
+        let customImportData = []; // Dados da planilha personalizada
+        let customImportHeaders = []; // Cabeçalhos da planilha personalizada
+
         function setupFileUpload() {
             const uploadArea = $('uploadArea');
             const fileInput = $('fileInput');
+            const uploadAreaCustom = $('uploadAreaCustom');
+            const fileInputCustom = $('fileInputCustom');
 
             if (!uploadArea || !fileInput) return;
 
+            // Importação padrão
             uploadArea.onclick = () => fileInput.click();
 
             uploadArea.ondragover = (e) => {
@@ -2410,6 +2488,202 @@
             fileInput.onchange = (e) => {
                 if (e.target.files.length) handleFile(e.target.files[0]);
             };
+
+            // Importação personalizada
+            if (uploadAreaCustom && fileInputCustom) {
+                uploadAreaCustom.onclick = () => fileInputCustom.click();
+
+                uploadAreaCustom.ondragover = (e) => {
+                    e.preventDefault();
+                    uploadAreaCustom.classList.add('dragging');
+                };
+
+                uploadAreaCustom.ondragleave = () => uploadAreaCustom.classList.remove('dragging');
+
+                uploadAreaCustom.ondrop = (e) => {
+                    e.preventDefault();
+                    uploadAreaCustom.classList.remove('dragging');
+                    if (e.dataTransfer.files.length) handleCustomFile(e.dataTransfer.files[0]);
+                };
+
+                fileInputCustom.onchange = (e) => {
+                    if (e.target.files.length) handleCustomFile(e.target.files[0]);
+                };
+            }
+        }
+
+        function handleCustomFile(file) {
+            const name = file.name.toLowerCase();
+
+            if (name.endsWith('.csv')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = parseCSV(e.target.result);
+                    if (data.length > 0) {
+                        openColumnMappingModal(data);
+                    } else {
+                        showToast('Planilha vazia ou inválida', 'danger');
+                    }
+                };
+                reader.readAsText(file, 'UTF-8');
+            } else {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    const sheet = wb.Sheets[wb.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(sheet);
+                    if (jsonData.length > 0) {
+                        openColumnMappingModal(jsonData);
+                    } else {
+                        showToast('Planilha vazia ou inválida', 'danger');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function openColumnMappingModal(data) {
+            customImportData = data;
+            customImportHeaders = Object.keys(data[0]);
+
+            // Preencher selects com as colunas encontradas
+            const selects = ['mapAtId', 'mapCidade', 'mapBairro', 'mapVeiculo', 'mapGaiola', 'mapTurno'];
+            const autoMap = {
+                'mapAtId': ['AT ID', 'at_id', 'AT_ID', 'ATID', 'ID'],
+                'mapCidade': ['Cidade', 'cidade', 'CIDADE', 'City'],
+                'mapBairro': ['Bairro', 'Bairros', 'bairro', 'BAIRRO', 'Neighborhood'],
+                'mapVeiculo': ['Tipo de Veículo', 'Tipo Veiculo', 'Tipo Veículo', 'Veiculo', 'veiculo', 'VEICULO', 'Vehicle'],
+                'mapGaiola': ['Gaiola', 'gaiola', 'GAIOLA', 'Cage'],
+                'mapTurno': ['AM/PM', 'am/pm', 'Turno', 'turno', 'TURNO', 'Shift']
+            };
+
+            selects.forEach(selectId => {
+                const select = $(selectId);
+                const isRequired = selectId === 'mapCidade' || selectId === 'mapBairro' || selectId === 'mapVeiculo';
+                
+                select.innerHTML = isRequired 
+                    ? '<option value="">-- Selecione --</option>'
+                    : '<option value="">-- Não importar --</option>';
+
+                customImportHeaders.forEach(header => {
+                    const option = document.createElement('option');
+                    option.value = header;
+                    option.textContent = header;
+                    select.appendChild(option);
+                });
+
+                // Auto-mapear se encontrar coluna correspondente
+                const possibleNames = autoMap[selectId] || [];
+                for (const name of possibleNames) {
+                    if (customImportHeaders.includes(name)) {
+                        select.value = name;
+                        break;
+                    }
+                }
+            });
+
+            // Mostrar preview
+            showPreview();
+
+            // Adicionar listeners para atualizar preview
+            selects.forEach(selectId => {
+                $(selectId).onchange = showPreview;
+            });
+
+            openModal('columnMappingModal');
+            $('fileInputCustom').value = '';
+        }
+
+        function showPreview() {
+            const previewDiv = $('previewData');
+            const tableDiv = $('previewTable');
+            
+            const mapping = {
+                at_id: $('mapAtId').value,
+                cidade: $('mapCidade').value,
+                bairro: $('mapBairro').value,
+                veiculo: $('mapVeiculo').value,
+                gaiola: $('mapGaiola').value,
+                turno: $('mapTurno').value
+            };
+
+            // Mostrar primeiras 3 linhas mapeadas
+            const previewRows = customImportData.slice(0, 3);
+            
+            let html = '<table style="width: 100%; font-size: 12px; border-collapse: collapse;">';
+            html += '<thead><tr style="background: var(--bg-secondary);">';
+            html += '<th style="padding: 6px; text-align: left; border-bottom: 1px solid var(--border-color);">AT ID</th>';
+            html += '<th style="padding: 6px; text-align: left; border-bottom: 1px solid var(--border-color);">Cidade</th>';
+            html += '<th style="padding: 6px; text-align: left; border-bottom: 1px solid var(--border-color);">Bairro</th>';
+            html += '<th style="padding: 6px; text-align: left; border-bottom: 1px solid var(--border-color);">Veículo</th>';
+            html += '<th style="padding: 6px; text-align: left; border-bottom: 1px solid var(--border-color);">Gaiola</th>';
+            html += '<th style="padding: 6px; text-align: left; border-bottom: 1px solid var(--border-color);">Turno</th>';
+            html += '</tr></thead><tbody>';
+
+            previewRows.forEach(row => {
+                html += '<tr>';
+                html += `<td style="padding: 6px; border-bottom: 1px solid var(--border-color);">${mapping.at_id ? (row[mapping.at_id] || '-') : '-'}</td>`;
+                html += `<td style="padding: 6px; border-bottom: 1px solid var(--border-color);">${mapping.cidade ? (row[mapping.cidade] || '-') : '-'}</td>`;
+                html += `<td style="padding: 6px; border-bottom: 1px solid var(--border-color);">${mapping.bairro ? (row[mapping.bairro] || '-') : '-'}</td>`;
+                html += `<td style="padding: 6px; border-bottom: 1px solid var(--border-color);">${mapping.veiculo ? (row[mapping.veiculo] || '-') : '-'}</td>`;
+                html += `<td style="padding: 6px; border-bottom: 1px solid var(--border-color);">${mapping.gaiola ? (row[mapping.gaiola] || '-') : '-'}</td>`;
+                html += `<td style="padding: 6px; border-bottom: 1px solid var(--border-color);">${mapping.turno ? (row[mapping.turno] || '-') : '-'}</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            tableDiv.innerHTML = html;
+            previewDiv.style.display = 'block';
+        }
+
+        async function processCustomImport() {
+            const mapping = {
+                at_id: $('mapAtId').value,
+                cidade: $('mapCidade').value,
+                bairro: $('mapBairro').value,
+                veiculo: $('mapVeiculo').value,
+                gaiola: $('mapGaiola').value,
+                turno: $('mapTurno').value
+            };
+
+            // Validar campos obrigatórios
+            if (!mapping.cidade || !mapping.bairro || !mapping.veiculo) {
+                showToast('Selecione as colunas obrigatórias: Cidade, Bairro e Veículo', 'warning');
+                return;
+            }
+
+            closeModal('columnMappingModal');
+            showLoading();
+
+            let count = 0;
+            try {
+                for (const row of customImportData) {
+                    const cidade = row[mapping.cidade];
+                    const bairro = row[mapping.bairro];
+                    const veiculo = row[mapping.veiculo];
+
+                    if (cidade && bairro && veiculo) {
+                        await saveRoute({
+                            at_id: mapping.at_id ? (row[mapping.at_id]?.toString().trim() || null) : null,
+                            cidade: cidade.toString().trim(),
+                            bairro: bairro.toString().trim(),
+                            veiculo: veiculo.toString().trim(),
+                            gaiola: mapping.gaiola ? (row[mapping.gaiola]?.toString().trim() || null) : null,
+                            turno: mapping.turno ? (row[mapping.turno]?.toString().trim().toUpperCase() || null) : null
+                        });
+                        count++;
+                    }
+                }
+
+                showImportStatus(`✅ ${count} rotas importadas!`, 'success');
+            } catch (error) {
+                showImportStatus('❌ Erro: ' + error.message, 'danger');
+            } finally {
+                hideLoading();
+                customImportData = [];
+                customImportHeaders = [];
+            }
         }
 
         function handleFile(file) {
