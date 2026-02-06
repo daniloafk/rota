@@ -533,6 +533,7 @@
             background: var(--bg-secondary);
             color: var(--text-secondary);
             white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .filter-chip:hover { border-color: var(--accent-primary); }
@@ -543,14 +544,36 @@
             color: white;
         }
 
+        /* Tablets pequenos e celulares grandes */
+        @media (max-width: 768px) {
+            .filter-chips {
+                gap: 5px;
+            }
+            .filter-chip {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+        }
+
+        /* Celulares médios */
         @media (max-width: 480px) {
             .filter-chips {
                 gap: 4px;
             }
             .filter-chip {
-                padding: 5px 10px;
-                font-size: 12px;
+                padding: 4px 8px;
+                font-size: 11px;
                 border-width: 1.5px;
+                border-radius: 16px;
+            }
+        }
+
+        /* Celulares pequenos */
+        @media (max-width: 360px) {
+            .filter-chip {
+                padding: 3px 6px;
+                font-size: 10px;
+                border-radius: 12px;
             }
         }
 
