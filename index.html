@@ -1434,9 +1434,22 @@
 
         function handleSettingsChange(payload) {
             if (payload.new) {
+                const wasOpen = isFormOpen();
                 settings = payload.new;
+                const isNowOpen = isFormOpen();
+                
                 updateFormControlUI();
                 applyFormAvailability();
+                
+                // Toast apenas no formulário público e só quando estado muda
+                const isPublic = window.location.hash === '#form' || !currentUser;
+                if (isPublic && wasOpen !== isNowOpen) {
+                    if (isNowOpen) {
+                        showToast('🟢 Formulário ABERTO!', 'success');
+                    } else {
+                        showToast('🔴 Formulário FECHADO!', 'warning');
+                    }
+                }
             }
         }
 
@@ -2411,7 +2424,7 @@
             if (isPublic) {
                 applyFormAvailability();
                 
-                // Notificar mudança APENAS no formulário público
+                // Toast para mudanças por HORÁRIO (não capturadas pelo Realtime)
                 if (lastFormState !== null && wasOpen !== isNowOpen) {
                     if (isNowOpen) {
                         showToast('🟢 Formulário ABERTO!', 'success');
@@ -2423,7 +2436,7 @@
             
             lastFormState = isNowOpen;
             
-            // Atualiza UI do admin (sem toast)
+            // Atualiza UI do admin
             if (isAdmin) {
                 updateFormControlUI();
             }
