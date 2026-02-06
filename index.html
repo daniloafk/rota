@@ -1999,6 +1999,11 @@
             if (vehicleFilterSection) {
                 vehicleFilterSection.style.display = open ? (vehicleFilterSection.dataset.hasFilters === 'true' ? 'block' : 'none') : 'none';
             }
+
+            // Ajustar altura da lista quando formulário abre
+            if (open) {
+                setTimeout(adjustRoutesGridHeight, 100);
+            }
         }
 
         async function toggleFormEnabled() {
