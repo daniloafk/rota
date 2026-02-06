@@ -1721,6 +1721,7 @@
 
             const search = ($('searchRoutes')?.value || '').toLowerCase();
             const filtered = routes.filter(r =>
+                (r.at_id || '').toLowerCase().includes(search) ||
                 r.cidade.toLowerCase().includes(search) ||
                 r.bairro.toLowerCase().includes(search)
             );
@@ -1732,6 +1733,7 @@
                     <table>
                         <thead>
                             <tr>
+                                <th>AT ID</th>
                                 <th>Cidade</th>
                                 <th>Bairro</th>
                                 <th>Veículo</th>
@@ -1744,6 +1746,7 @@
                                 const occupied = occupiedIds.has(r.id);
                                 return `
                                     <tr>
+                                        <td><code style="font-size: 11px; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">${r.at_id || '-'}</code></td>
                                         <td><strong>${r.cidade}</strong></td>
                                         <td>${r.bairro}</td>
                                         <td><span class="badge" style="${getVehicleBadgeStyle(r.veiculo)}">${r.veiculo}</span></td>
@@ -1775,7 +1778,8 @@
             const search = ($('searchDeliverers')?.value || '').toLowerCase();
             const filtered = deliverers.filter(d =>
                 d.name.toLowerCase().includes(search) ||
-                d.vehicle_plate.toLowerCase().includes(search)
+                d.vehicle_plate.toLowerCase().includes(search) ||
+                (d.route_at_id || '').toLowerCase().includes(search)
             );
 
             container.innerHTML = `
@@ -1783,6 +1787,7 @@
                     <table>
                         <thead>
                             <tr>
+                                <th>AT ID</th>
                                 <th>Nome</th>
                                 <th>Placa / Veículo</th>
                                 <th>Rota</th>
@@ -1793,6 +1798,7 @@
                         <tbody>
                             ${filtered.map(d => `
                                 <tr>
+                                    <td><code style="font-size: 11px; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">${d.route_at_id || '-'}</code></td>
                                     <td><strong>${d.name}</strong></td>
                                     <td>
                                         <span class="badge badge-info">${d.vehicle_plate}</span>
@@ -1907,7 +1913,7 @@
                 container.innerHTML = filtered.map(r => `
                     <div class="route-item" data-id="${r.id}">
                         <input type="radio" class="route-checkbox" name="selectedRoute" value="${r.id}"
-                            data-cidade="${r.cidade}" data-bairro="${r.bairro}" data-veiculo="${r.veiculo}">
+                            data-atid="${r.at_id || ''}" data-cidade="${r.cidade}" data-bairro="${r.bairro}" data-veiculo="${r.veiculo}">
                         <div class="route-info">
                             <div class="route-location">📍 ${r.cidade} - ${r.bairro}</div>
                             <div class="route-details">🚗 ${r.veiculo}</div>
@@ -2103,12 +2109,18 @@
 
             try {
                 for (const row of data) {
+                    const at_id = row['AT ID'] || row['at_id'] || row['AT_ID'] || row['ATID'] || '';
                     const cidade = row.Cidade || row.cidade || row.CIDADE;
                     const bairro = row.Bairro || row.Bairros || row.bairro || row.BAIRRO;
-                    const veiculo = row['Tipo de Veículo'] || row['Tipo Veiculo'] || row.Veiculo || row.veiculo || row.VEICULO;
+                    const veiculo = row['Tipo de Veículo'] || row['Tipo Veiculo'] || row['Tipo Veículo'] || row.Veiculo || row.veiculo || row.VEICULO;
 
                     if (cidade && bairro && veiculo) {
-                        await saveRoute({ cidade: cidade.trim(), bairro: bairro.trim(), veiculo: veiculo.trim() });
+                        await saveRoute({ 
+                            at_id: at_id.toString().trim() || null,
+                            cidade: cidade.trim(), 
+                            bairro: bairro.trim(), 
+                            veiculo: veiculo.trim() 
+                        });
                         count++;
                     }
                 }
@@ -2136,6 +2148,7 @@
             if (!routes.length) return showToast('Nenhuma rota para exportar', 'warning');
 
             const data = routes.map(r => ({
+                'AT ID': r.at_id || '',
                 'Cidade': r.cidade,
                 'Bairro': r.bairro,
                 'Tipo de Veículo': r.veiculo
@@ -2151,10 +2164,12 @@
             if (!deliverers.length) return showToast('Nenhum entregador para exportar', 'warning');
 
             const data = deliverers.map(d => ({
+                'AT ID': d.route_at_id || '',
                 'Nome': d.name,
                 'Placa': d.vehicle_plate,
                 'Veículo': d.route_veiculo,
-                'Rota': `${d.route_cidade} - ${d.route_bairro}`,
+                'Cidade': d.route_cidade,
+                'Bairro': d.route_bairro,
                 'Data': new Date(d.created_at).toLocaleDateString('pt-BR')
             }));
 
@@ -2269,6 +2284,7 @@
             const name = $('delivererName').value.trim();
             const plate = $('vehiclePlate').value.trim().toUpperCase();
             const routeId = selectedRadio.value;
+            const atId = selectedRadio.dataset.atid || null;
             const cidade = selectedRadio.dataset.cidade;
             const bairro = selectedRadio.dataset.bairro;
             const veiculo = selectedRadio.dataset.veiculo;
@@ -2278,6 +2294,7 @@
                     name,
                     vehicle_plate: plate,
                     route_id: routeId,
+                    route_at_id: atId,
                     route_cidade: cidade,
                     route_bairro: bairro,
                     route_veiculo: veiculo
