@@ -161,11 +161,11 @@
 
         /* Container sem padding para formView em mobile */
         @media (max-width: 768px) {
-            body:has(#formView.active) .container {
+            .form-mode .container {
                 padding: 0;
             }
             
-            body:has(#formView.active) {
+            .form-mode {
                 overflow: hidden;
             }
         }
@@ -1007,12 +1007,6 @@
 
             #formView #formClosedBanner span {
                 font-size: 16px;
-            }
-
-            /* Container sem padding no formView */
-            #formView + .container,
-            .container:has(#formView) {
-                padding: 0;
             }
         }
 
@@ -2741,7 +2735,7 @@
                     $('loginScreen').style.display = 'none';
                     $('mainApp').style.display = 'block';
                     $('appHeader').style.display = 'none';
-                    document.body.classList.add('public-mode');
+                    document.body.classList.add('public-mode', 'form-mode');
 
                     await loadAllData();
                     setupRealtime();
