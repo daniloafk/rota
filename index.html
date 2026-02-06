@@ -3248,10 +3248,14 @@
                 return showToast('Placa inválida!', 'warning');
             }
 
-            // Validar formato da placa (ABC1234 ou ABC1D23)
-            const placaRegex = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/;
-            if (!placaRegex.test(plate)) {
-                return showToast('Formato de placa inválido! Use ABC1234 ou ABC1D23', 'warning');
+            // Validar formato da placa brasileira
+            // Padrão antigo: ABC1234 (3 letras + 4 números)
+            // Padrão Mercosul: ABC1D23 (3 letras + 1 número + 1 letra + 2 números)
+            const placaAntigaRegex = /^[A-Z]{3}[0-9]{4}$/;
+            const placaMercosulRegex = /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/;
+            
+            if (!placaAntigaRegex.test(plate) && !placaMercosulRegex.test(plate)) {
+                return showToast('Formato de placa inválido! Use ABC1234 (antigo) ou ABC1D23 (Mercosul)', 'warning');
             }
 
             showLoading();
