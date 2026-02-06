@@ -1429,6 +1429,7 @@
                 deliverers = deliverers.filter(d => d.id !== payload.old.id);
             }
             updateStats();
+            renderRoutesTable(); // Atualiza status das rotas
             renderDeliverersTable();
             renderFormRoutes();
         }
