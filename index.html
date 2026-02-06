@@ -919,150 +919,66 @@
 
             .login-card { padding: 32px 24px; }
 
-            /* Otimizações do formulário público para mobile */
+            /* FORMULÁRIO PÚBLICO MOBILE */
+            .form-mode {
+                overflow: hidden !important;
+            }
+
+            .form-mode .container {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+            }
+
             #formView {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 50;
-                background: var(--bg-primary);
-            }
-
-            #formView .form-public-card {
-                max-width: none;
-                margin: 0;
-                height: 100%;
-                border-radius: 0;
-                display: flex;
-                flex-direction: column;
-                padding: 16px;
-                overflow: hidden;
-            }
-
-            #formView .card-header {
-                flex-shrink: 0;
-                padding-bottom: 10px;
-                margin-bottom: 10px;
-            }
-
-            #formView .card-title {
-                font-size: 20px;
-            }
-
-            #formView .card-subtitle {
-                font-size: 14px;
-                margin-top: 4px;
-            }
-
-            #formView #delivererForm {
-                display: flex;
-                flex-direction: column;
-                flex: 1;
-                overflow: hidden;
-            }
-
-            #formView .form-group {
-                flex-shrink: 0;
-                margin-bottom: 10px;
-            }
-
-            #formView .form-label {
-                font-size: 15px;
-                margin-bottom: 6px;
-            }
-
-            #formView .form-input {
-                padding: 12px 14px;
-                font-size: 16px;
-            }
-
-            #formView .filter-section {
-                margin-bottom: 8px;
-            }
-
-            #formView .filter-section label {
-                font-size: 14px !important;
-            }
-
-            /* Container das rotas - ocupa espaço restante */
-            #formView .routes-form-group {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-                min-height: 0;
-            }
-
-            #formView .routes-grid {
-                flex: 1;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-                gap: 8px;
-                min-height: 0;
-            }
-
-            #formView .route-item {
-                padding: 12px 14px;
-                gap: 10px;
-                border-radius: 10px;
-            }
-
-            #formView .route-location {
-                font-size: 15px;
-                margin-bottom: 2px;
-            }
-
-            #formView .route-details {
-                font-size: 13px;
-            }
-
-            #formView .route-checkbox {
-                width: 20px;
-                height: 20px;
-            }
-
-            #formView .modal-actions {
-                flex-shrink: 0;
-                margin-top: 12px;
-                padding-top: 12px;
-                border-top: 1px solid var(--border-color);
-            }
-
-            #formView .modal-actions .btn {
-                padding: 14px 24px;
-                font-size: 16px;
+                height: 100vh;
                 width: 100%;
+                overflow: hidden;
             }
 
-            #formView #formClosedBanner {
-                padding: 14px;
-                font-size: 14px;
-                flex-shrink: 0;
-            }
-        }
-
-        /* Celulares pequenos - otimização extra */
-        @media (max-width: 480px) {
             #formView .form-public-card {
-                padding: 14px;
+                max-width: 100%;
+                width: 100%;
+                height: 100vh;
+                margin: 0;
+                padding: 12px;
+                border-radius: 0;
+                box-shadow: none;
+                display: flex;
+                flex-direction: column;
             }
 
             #formView .card-header {
-                padding-bottom: 8px;
-                margin-bottom: 8px;
+                padding: 0 0 8px 0;
+                margin: 0 0 8px 0;
+                flex-shrink: 0;
             }
 
             #formView .card-title {
                 font-size: 18px;
+                margin: 0;
             }
 
             #formView .card-subtitle {
-                font-size: 13px;
+                font-size: 12px;
+                margin: 4px 0 0 0;
+            }
+
+            #formView #formClosedBanner {
+                flex-shrink: 0;
+                margin-bottom: 8px;
+            }
+
+            #formView #delivererForm {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+                overflow: hidden;
             }
 
             #formView .form-group {
+                flex-shrink: 0;
                 margin-bottom: 8px;
             }
 
@@ -1076,8 +992,41 @@
                 font-size: 16px;
             }
 
+            #formView .filter-section {
+                margin-bottom: 6px;
+            }
+
+            #formView .filter-section > label {
+                font-size: 12px !important;
+            }
+
+            /* ÁREA DAS ROTAS - CRESCE E TEM SCROLL */
+            #formView .routes-form-group {
+                flex: 1 !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+                display: flex !important;
+                flex-direction: column !important;
+                margin-bottom: 0 !important;
+            }
+
+            #formView .routes-form-group > .form-label {
+                flex-shrink: 0;
+            }
+
+            #formView .routes-grid {
+                flex: 1;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch;
+                min-height: 0;
+                max-height: none;
+                gap: 6px;
+                padding-right: 4px;
+            }
+
             #formView .route-item {
                 padding: 10px 12px;
+                border-radius: 8px;
                 gap: 8px;
             }
 
@@ -1089,37 +1038,42 @@
                 font-size: 12px;
             }
 
+            #formView .route-checkbox {
+                width: 18px;
+                height: 18px;
+            }
+
+            /* BOTÃO CONFIRMAR - SEMPRE VISÍVEL */
             #formView .modal-actions {
-                margin-top: 10px;
-                padding-top: 10px;
+                flex-shrink: 0 !important;
+                margin: 8px 0 0 0;
+                padding: 8px 0 0 0;
+                border-top: 1px solid var(--border-color);
             }
 
             #formView .modal-actions .btn {
+                width: 100% !important;
                 padding: 12px 20px;
                 font-size: 15px;
             }
         }
 
-        /* Celulares muito pequenos */
-        @media (max-width: 360px) {
+        /* Celulares pequenos */
+        @media (max-width: 480px) {
             #formView .form-public-card {
-                padding: 12px;
+                padding: 10px;
             }
 
             #formView .card-title {
-                font-size: 17px;
+                font-size: 16px;
             }
 
             #formView .card-subtitle {
-                font-size: 12px;
-            }
-
-            #formView .form-label {
-                font-size: 13px;
+                font-size: 11px;
             }
 
             #formView .form-input {
-                padding: 9px 10px;
+                padding: 8px 10px;
                 font-size: 15px;
             }
 
@@ -1138,6 +1092,34 @@
             #formView .modal-actions .btn {
                 padding: 10px 16px;
                 font-size: 14px;
+            }
+        }
+
+        /* Celulares muito pequenos */
+        @media (max-width: 360px) {
+            #formView .form-public-card {
+                padding: 8px;
+            }
+
+            #formView .card-title {
+                font-size: 15px;
+            }
+
+            #formView .form-input {
+                padding: 7px 8px;
+                font-size: 14px;
+            }
+
+            #formView .route-item {
+                padding: 6px 8px;
+            }
+
+            #formView .route-location {
+                font-size: 12px;
+            }
+
+            #formView .route-details {
+                font-size: 10px;
             }
         }
 
