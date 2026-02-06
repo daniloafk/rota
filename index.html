@@ -1833,7 +1833,7 @@
                 // Toast apenas no formulário público, só quando estado muda, e evita duplicação
                 const isPublic = window.location.hash === '#form' || !currentUser;
                 const now = Date.now();
-                if (isPublic && wasOpen !== isNowOpen && (now - lastToastTime > 3000)) {
+                if (isPublic && wasOpen !== isNowOpen && (now - lastToastTime > 5000)) {
                     lastToastTime = now;
                     if (isNowOpen) {
                         showToast('🟢 Formulário ABERTO!', 'success');
@@ -3147,7 +3147,7 @@
                 
                 // Toast para mudanças por HORÁRIO - com proteção anti-duplicação
                 const now = Date.now();
-                if (lastFormState !== null && wasOpen !== isNowOpen && (now - lastToastTime > 3000)) {
+                if (lastFormState !== null && wasOpen !== isNowOpen && (now - lastToastTime > 5000)) {
                     lastToastTime = now;
                     if (isNowOpen) {
                         showToast('🟢 Formulário ABERTO!', 'success');
