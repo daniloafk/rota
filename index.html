@@ -1364,8 +1364,16 @@
                         <input type="text" class="search-input" id="searchDeliverers" placeholder="Buscar por nome ou placa..." oninput="renderDeliverersTable()">
                         <button class="btn btn-secondary" onclick="exportDeliverersToExcel()">📥 Exportar Excel</button>
                         <button class="btn btn-secondary" onclick="generateDeliverersImage()">📸 Gerar Imagem</button>
-                        <button class="btn btn-success" onclick="confirmUpdateAllStatus('liberado')" style="background: #059669;">🚚 Liberar Todas</button>
-                        <button class="btn btn-warning" onclick="confirmUpdateAllStatus('cancelado')" style="background: #dc2626;">🚫 Cancelar Todas</button>
+                    </div>
+                    <div class="filter-bar" style="margin-top: 8px; flex-wrap: wrap; gap: 8px;">
+                        <button class="btn" onclick="confirmUpdateAllStatus('liberado')" style="background: #059669; color: white;">🚚 Liberar Todas</button>
+                        <button class="btn" onclick="confirmUpdateStatusByTurno('liberado', 'AM')" style="background: #16a34a; color: white;">🚚 Liberar AM</button>
+                        <button class="btn" onclick="confirmUpdateStatusByTurno('liberado', 'PM')" style="background: #22c55e; color: white;">🚚 Liberar PM</button>
+                        <span style="border-left: 2px solid #e2e8f0; margin: 0 4px;"></span>
+                        <button class="btn" onclick="confirmUpdateAllStatus('cancelado')" style="background: #dc2626; color: white;">🚫 Cancelar Todas</button>
+                        <button class="btn" onclick="confirmUpdateStatusByTurno('cancelado', 'AM')" style="background: #ef4444; color: white;">🚫 Cancelar AM</button>
+                        <button class="btn" onclick="confirmUpdateStatusByTurno('cancelado', 'PM')" style="background: #f87171; color: white;">🚫 Cancelar PM</button>
+                        <span style="border-left: 2px solid #e2e8f0; margin: 0 4px;"></span>
                         <button class="btn btn-danger" onclick="confirmClearAllDeliverers()">🗑️ Limpar Tudo</button>
                     </div>
 
@@ -2599,6 +2607,40 @@
                     renderDeliverersTable();
                     
                     showToast(isLiberar ? '🚚 Todas as rotas foram liberadas!' : '🚫 Todas as rotas foram canceladas!', isLiberar ? 'success' : 'warning');
+                } catch (error) {
+                    showToast('Erro: ' + error.message, 'danger');
+                } finally {
+                    hideLoading();
+                }
+            });
+        }
+
+        function confirmUpdateStatusByTurno(status, turno) {
+            const isLiberar = status === 'liberado';
+            const titulo = isLiberar ? `🚚 Liberar Rotas ${turno}` : `🚫 Cancelar Rotas ${turno}`;
+            const mensagem = isLiberar 
+                ? `Confirma a liberação de todas as rotas do turno ${turno}?` 
+                : `Confirma o cancelamento de todas as rotas do turno ${turno}?`;
+            
+            showConfirm(titulo, mensagem, async () => {
+                showLoading();
+                try {
+                    const { error } = await supabaseClient
+                        .from('deliverers')
+                        .update({ status })
+                        .eq('route_turno', turno);
+                    
+                    if (error) throw error;
+                    
+                    // Atualizar localmente
+                    deliverers.forEach(d => {
+                        if (d.route_turno === turno) {
+                            d.status = status;
+                        }
+                    });
+                    renderDeliverersTable();
+                    
+                    showToast(isLiberar ? `🚚 Rotas ${turno} liberadas!` : `🚫 Rotas ${turno} canceladas!`, isLiberar ? 'success' : 'warning');
                 } catch (error) {
                     showToast('Erro: ' + error.message, 'danger');
                 } finally {
