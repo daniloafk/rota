@@ -1927,14 +1927,14 @@
 
                 container.innerHTML = filtered.map(r => {
                     const turnoStyle = r.turno === 'AM' ? 'background: #fef3c7; color: #92400e;' : r.turno === 'PM' ? 'background: #dbeafe; color: #1e40af;' : '';
-                    const turnoHtml = r.turno ? `<span class="badge" style="${turnoStyle} margin-left: 8px; font-size: 10px;">${r.turno}</span>` : '';
+                    const turnoHtml = r.turno ? `<span style="${turnoStyle} padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 8px;">${r.turno}</span>` : '';
                     return `
                     <div class="route-item" data-id="${r.id}">
                         <input type="radio" class="route-checkbox" name="selectedRoute" value="${r.id}"
                             data-atid="${r.at_id || ''}" data-cidade="${r.cidade}" data-bairro="${r.bairro}" data-veiculo="${r.veiculo}" data-gaiola="${r.gaiola || ''}" data-turno="${r.turno || ''}">
                         <div class="route-info">
-                            <div class="route-location">📍 ${r.cidade} - ${r.bairro}${turnoHtml}</div>
-                            <div class="route-details">🚗 ${r.veiculo}</div>
+                            <div class="route-location">📍 ${r.cidade} - ${r.bairro}</div>
+                            <div class="route-details">🚗 ${r.veiculo}${turnoHtml}</div>
                         </div>
                     </div>
                 `}).join('');
