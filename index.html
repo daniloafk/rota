@@ -1576,8 +1576,9 @@
             }
 
             if (toggleBtn) {
-                toggleBtn.textContent = settings.form_enabled ? 'Desabilitar' : 'Habilitar';
-                toggleBtn.className = 'btn ' + (settings.form_enabled ? 'btn-danger' : 'btn-primary');
+                // Botão mostra ação oposta ao estado atual
+                toggleBtn.textContent = open ? 'Desabilitar' : 'Habilitar';
+                toggleBtn.className = 'btn ' + (open ? 'btn-danger' : 'btn-primary');
             }
 
             if (openInput) openInput.value = settings.open_time || '';
@@ -1602,12 +1603,19 @@
         async function toggleFormEnabled() {
             showLoading();
             try {
+                // Verifica o estado REAL do formulário (não apenas form_enabled)
+                const currentlyOpen = isFormOpen();
+                
+                // Se está aberto, queremos fechar (form_enabled = false)
+                // Se está fechado, queremos abrir (form_enabled = true)
+                const newFormEnabled = !currentlyOpen;
+                
                 await updateSettings({ 
                     ...settings, 
-                    form_enabled: !settings.form_enabled,
+                    form_enabled: newFormEnabled,
                     manual_override: true // Marca que houve ação manual
                 });
-                showToast(`Formulário ${settings.form_enabled ? 'habilitado' : 'desabilitado'}!`, 'success');
+                showToast(`Formulário ${newFormEnabled ? 'habilitado' : 'desabilitado'}!`, 'success');
             } catch (error) {
                 showToast('Erro: ' + error.message, 'danger');
             } finally {
