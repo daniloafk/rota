@@ -164,10 +164,6 @@
             .form-mode .container {
                 padding: 0;
             }
-            
-            .form-mode {
-                overflow: hidden;
-            }
         }
 
         .view {
@@ -982,11 +978,11 @@
             }
 
             #formView .routes-grid {
-                flex: 1;
-                max-height: none;
-                min-height: 120px;
+                max-height: 35vh;
+                min-height: 100px;
                 gap: 6px;
                 overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
             }
 
             #formView .modal-actions {
@@ -1068,8 +1064,10 @@
             }
 
             #formView .routes-grid {
+                max-height: 32vh;
                 gap: 4px;
-                min-height: 100px;
+                min-height: 80px;
+                -webkit-overflow-scrolling: touch;
             }
 
             #formView .modal-actions {
@@ -1118,8 +1116,10 @@
             }
 
             #formView .routes-grid {
+                max-height: 28vh;
                 gap: 3px;
-                min-height: 80px;
+                min-height: 60px;
+                -webkit-overflow-scrolling: touch;
             }
 
             #formView .modal-actions .btn {
