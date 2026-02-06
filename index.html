@@ -988,6 +988,12 @@
                 font-size: 16px !important;
             }
 
+            /* Botão de consulta status */
+            #formView .btn-secondary {
+                font-size: 12px !important;
+                padding: 8px 10px !important;
+            }
+
             /* Filtros */
             #formView .filter-section {
                 margin-bottom: 4px !important;
@@ -1406,7 +1412,12 @@
 
                         <div class="form-group">
                             <label class="form-label required" for="vehiclePlate">Placa do Veículo</label>
-                            <input type="text" class="form-input" id="vehiclePlate" required placeholder="ABC1234" maxlength="7" style="text-transform: uppercase;">
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" class="form-input" id="vehiclePlate" required placeholder="ABC1234" maxlength="7" style="text-transform: uppercase; flex: 1;">
+                                <button type="button" class="btn btn-secondary" onclick="consultarStatus()" style="white-space: nowrap; padding: 8px 12px;">
+                                    🔍 Consultar Status
+                                </button>
+                            </div>
                         </div>
 
                         <div class="form-group routes-form-group">
@@ -2239,6 +2250,7 @@
                                 <th>Gaiola</th>
                                 <th>AM/PM</th>
                                 <th>Rota</th>
+                                <th>Status</th>
                                 <th>Data</th>
                                 <th>Ações</th>
                             </tr>
@@ -2246,6 +2258,10 @@
                         <tbody>
                             ${filtered.map(d => {
                                 const turnoStyle = d.route_turno === 'AM' ? 'background: #fef3c7; color: #92400e;' : d.route_turno === 'PM' ? 'background: #dbeafe; color: #1e40af;' : 'background: #f3f4f6; color: #6b7280;';
+                                const status = d.status || 'pendente';
+                                const statusStyle = status === 'liberado' ? 'background: #d1fae5; color: #059669;' : status === 'cancelado' ? 'background: #fee2e2; color: #991b1b;' : 'background: #fef3c7; color: #92400e;';
+                                const statusIcon = status === 'liberado' ? '✅' : status === 'cancelado' ? '❌' : '⏳';
+                                const statusText = status === 'liberado' ? 'Pode Carregar' : status === 'cancelado' ? 'Cancelado' : 'Pendente';
                                 return `
                                 <tr>
                                     <td><code style="font-size: 11px; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">${escapeHtml(d.route_at_id) || '-'}</code></td>
@@ -2257,8 +2273,13 @@
                                     <td><code style="font-size: 11px; background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px;">${escapeHtml(d.route_gaiola) || '-'}</code></td>
                                     <td><span class="badge" style="${turnoStyle}">${escapeHtml(d.route_turno) || '-'}</span></td>
                                     <td><span class="badge badge-success">${escapeHtml(d.route_cidade)} - ${escapeHtml(d.route_bairro)}</span></td>
+                                    <td><span class="badge" style="${statusStyle}">${statusIcon} ${statusText}</span></td>
                                     <td>${new Date(d.created_at).toLocaleDateString('pt-BR')}</td>
-                                    <td><button class="btn-icon" onclick="confirmDeleteDeliverer('${escapeHtml(d.id)}')">🗑️</button></td>
+                                    <td style="white-space: nowrap;">
+                                        <button class="btn-icon" onclick="updateDelivererStatus('${escapeHtml(d.id)}', 'liberado')" title="Liberar para carregar" style="background: #d1fae5; border-radius: 4px; padding: 4px 8px;">🚚</button>
+                                        <button class="btn-icon" onclick="updateDelivererStatus('${escapeHtml(d.id)}', 'cancelado')" title="Cancelar rota" style="background: #fee2e2; border-radius: 4px; padding: 4px 8px;">🚫</button>
+                                        <button class="btn-icon" onclick="confirmDeleteDeliverer('${escapeHtml(d.id)}')" title="Excluir" style="padding: 4px 8px;">🗑️</button>
+                                    </td>
                                 </tr>
                             `}).join('')}
                         </tbody>
@@ -2476,6 +2497,42 @@
             });
         }
 
+        async function updateDelivererStatus(id, status) {
+            const statusText = status === 'liberado' ? 'LIBERAR CARREGAMENTO' : 'CANCELAR ROTA';
+            const statusIcon = status === 'liberado' ? '🚚' : '🚫';
+            
+            showConfirm(
+                `${statusIcon} ${statusText}`,
+                status === 'liberado' 
+                    ? 'Confirma que o entregador pode vir carregar a rota?' 
+                    : 'Confirma o cancelamento desta rota?',
+                async () => {
+                    showLoading();
+                    try {
+                        const { error } = await supabaseClient
+                            .from('deliverers')
+                            .update({ status })
+                            .eq('id', id);
+                        
+                        if (error) throw error;
+                        
+                        // Atualizar localmente
+                        const idx = deliverers.findIndex(d => d.id === id);
+                        if (idx !== -1) {
+                            deliverers[idx].status = status;
+                        }
+                        
+                        renderDeliverersTable();
+                        showToast(status === 'liberado' ? '🚚 Entregador liberado para carregar!' : '🚫 Rota cancelada!', status === 'liberado' ? 'success' : 'warning');
+                    } catch (error) {
+                        showToast('Erro: ' + error.message, 'danger');
+                    } finally {
+                        hideLoading();
+                    }
+                }
+            );
+        }
+
         function confirmDeleteDeliverer(id) {
             showConfirm('Deletar Entregador', 'Tem certeza que deseja deletar este entregador?', async () => {
                 showLoading();
@@ -2516,6 +2573,92 @@
                     hideLoading();
                 }
             });
+        }
+
+        // ============================================================
+        // CONSULTA DE STATUS (FORMULÁRIO PÚBLICO)
+        // ============================================================
+        async function consultarStatus() {
+            const placa = $('vehiclePlate').value.trim().toUpperCase();
+            
+            if (!placa || placa.length < 7) {
+                showToast('Digite a placa para consultar o status!', 'warning');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                // Buscar entregador pela placa
+                const { data, error } = await supabaseClient
+                    .from('deliverers')
+                    .select('*')
+                    .eq('vehicle_plate', placa)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    showToast('🔍 Nenhum cadastro encontrado para esta placa!', 'info');
+                    return;
+                }
+
+                const entregador = data[0];
+                const status = entregador.status || 'pendente';
+
+                // Mostrar modal com status
+                if (status === 'liberado') {
+                    openStatusModal('🚚 LIBERADO PARA CARREGAR!', 
+                        `${entregador.name}, você pode vir carregar sua rota!<br><br>` +
+                        `<strong>Rota:</strong> ${entregador.route_cidade} - ${entregador.route_bairro}<br>` +
+                        `<strong>Veículo:</strong> ${entregador.route_veiculo}`,
+                        'success');
+                } else if (status === 'cancelado') {
+                    openStatusModal('🚫 ROTA CANCELADA', 
+                        `${entregador.name}, infelizmente sua rota foi cancelada.<br><br>` +
+                        `Por favor, entre em contato com o operador ou escolha outra rota.`,
+                        'danger');
+                } else {
+                    openStatusModal('⏳ AGUARDANDO LIBERAÇÃO', 
+                        `${entregador.name}, seu cadastro está em análise.<br><br>` +
+                        `<strong>Rota:</strong> ${entregador.route_cidade} - ${entregador.route_bairro}<br>` +
+                        `<strong>Veículo:</strong> ${entregador.route_veiculo}<br><br>` +
+                        `Aguarde a liberação para carregar.`,
+                        'warning');
+                }
+
+            } catch (error) {
+                showToast('Erro ao consultar: ' + error.message, 'danger');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function openStatusModal(title, message, type) {
+            const colors = {
+                success: { bg: '#d1fae5', border: '#059669' },
+                danger: { bg: '#fee2e2', border: '#991b1b' },
+                warning: { bg: '#fef3c7', border: '#92400e' }
+            };
+            const c = colors[type] || colors.warning;
+
+            // Criar modal temporário
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.id = 'statusModal';
+            modal.innerHTML = `
+                <div class="modal-content" style="border-left: 4px solid ${c.border}; background: ${c.bg};">
+                    <div class="modal-header">
+                        <h3 class="modal-title" style="color: ${c.border};">${title}</h3>
+                    </div>
+                    <p style="color: #1e293b; line-height: 1.6;">${message}</p>
+                    <div class="modal-actions">
+                        <button class="btn btn-primary" onclick="this.closest('.modal').remove()" style="width: auto;">OK, Entendi</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
         // ============================================================
