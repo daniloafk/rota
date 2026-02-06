@@ -1975,6 +1975,9 @@
         function applyFormAvailability() {
             const banner = $('formClosedBanner');
             const form = $('delivererForm');
+            const routesContainer = $('routesContainer');
+            const filterSection = $('filterSection');
+            const vehicleFilterSection = $('vehicleFilterSection');
             const open = isFormOpen();
 
             if (banner) banner.style.display = open ? 'none' : 'flex';
@@ -1984,6 +1987,17 @@
                 inputs.forEach(el => el.disabled = !open);
                 form.style.opacity = open ? '1' : '0.5';
                 form.style.pointerEvents = open ? 'auto' : 'none';
+            }
+
+            // Esconder rotas e filtros quando formulário fechado
+            if (routesContainer) {
+                routesContainer.style.display = open ? 'grid' : 'none';
+            }
+            if (filterSection) {
+                filterSection.style.display = open ? (filterSection.dataset.hasFilters === 'true' ? 'block' : 'none') : 'none';
+            }
+            if (vehicleFilterSection) {
+                vehicleFilterSection.style.display = open ? (vehicleFilterSection.dataset.hasFilters === 'true' ? 'block' : 'none') : 'none';
             }
         }
 
@@ -2249,8 +2263,14 @@
                         <div><strong>Todas as rotas já foram ocupadas!</strong></div>
                     </div>
                 `;
-                if (filterSection) filterSection.style.display = 'none';
-                if (vehicleFilterSection) vehicleFilterSection.style.display = 'none';
+                if (filterSection) {
+                    filterSection.style.display = 'none';
+                    filterSection.dataset.hasFilters = 'false';
+                }
+                if (vehicleFilterSection) {
+                    vehicleFilterSection.style.display = 'none';
+                    vehicleFilterSection.dataset.hasFilters = 'false';
+                }
                 return;
             }
 
@@ -2260,6 +2280,7 @@
 
             if (cities.length > 1 && filterSection && cityFiltersContainer) {
                 filterSection.style.display = 'block';
+                filterSection.dataset.hasFilters = 'true';
                 cityFiltersContainer.innerHTML = `
                     <div class="filter-chip active" data-filter="all">Todas</div>
                     ${cities.map(c => `<div class="filter-chip" data-filter="${c}">${c}</div>`).join('')}
@@ -2273,10 +2294,12 @@
                 });
             } else if (filterSection) {
                 filterSection.style.display = 'none';
+                filterSection.dataset.hasFilters = 'false';
             }
 
             if (vehicles.length > 1 && vehicleFilterSection && vehicleFiltersContainer) {
                 vehicleFilterSection.style.display = 'block';
+                vehicleFilterSection.dataset.hasFilters = 'true';
                 vehicleFiltersContainer.innerHTML = `
                     <div class="filter-chip active" data-filter="all">Todos</div>
                     ${vehicles.map(v => `<div class="filter-chip" data-filter="${v}">${v}</div>`).join('')}
@@ -2290,6 +2313,7 @@
                 });
             } else if (vehicleFilterSection) {
                 vehicleFilterSection.style.display = 'none';
+                vehicleFilterSection.dataset.hasFilters = 'false';
             }
 
             applyFilters();
