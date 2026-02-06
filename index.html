@@ -1002,7 +1002,6 @@
                 overflow-y: auto !important;
                 -webkit-overflow-scrolling: touch !important;
                 gap: 6px !important;
-                max-height: calc(100vh - 500px) !important;
                 margin-bottom: 70px !important;
             }
 
@@ -1063,10 +1062,6 @@
                 font-size: 16px !important;
             }
 
-            #formView .routes-grid {
-                max-height: calc(100vh - 480px) !important;
-            }
-
             #formView .route-item {
                 padding: 8px !important;
             }
@@ -1098,10 +1093,6 @@
 
             #formView .card-subtitle {
                 display: none !important;
-            }
-
-            #formView .routes-grid {
-                max-height: calc(100vh - 450px) !important;
             }
 
             #formView .form-input {
@@ -2366,8 +2357,34 @@
                         item.classList.add('selected');
                     };
                 });
+
+                // Ajustar altura da lista dinamicamente no mobile
+                adjustRoutesGridHeight();
             }
         }
+
+        // Função para ajustar altura da lista de rotas no mobile
+        function adjustRoutesGridHeight() {
+            if (window.innerWidth > 768) return; // Só no mobile
+            
+            const container = $('routesContainer');
+            const button = document.querySelector('#formView .modal-actions');
+            
+            if (!container || !button) return;
+            
+            // Pegar posição do topo da lista
+            const containerRect = container.getBoundingClientRect();
+            const buttonHeight = 70; // Altura do botão fixo + padding
+            
+            // Calcular altura disponível
+            const availableHeight = window.innerHeight - containerRect.top - buttonHeight;
+            
+            // Aplicar altura (mínimo 100px)
+            container.style.maxHeight = Math.max(100, availableHeight) + 'px';
+        }
+
+        // Recalcular quando redimensionar a tela
+        window.addEventListener('resize', adjustRoutesGridHeight);
 
         // ============================================================
         // AÇÕES
