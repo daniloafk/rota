@@ -1947,6 +1947,10 @@
             return null;
         }
 
+        // Variáveis para controlar última atualização dos campos de horário
+        let lastSettingsOpenTime = null;
+        let lastSettingsCloseTime = null;
+
         function updateFormControlUI() {
             if (!currentUser) return;
 
@@ -1968,12 +1972,14 @@
                 toggleBtn.className = 'btn ' + (open ? 'btn-danger' : 'btn-primary');
             }
 
-            // Só atualiza os campos se NÃO estiverem com foco (usuário editando)
-            if (openInput && document.activeElement !== openInput) {
+            // Só atualiza os campos se o valor do SERVIDOR mudou (não sobrescreve edição local)
+            if (openInput && settings.open_time !== lastSettingsOpenTime) {
                 openInput.value = settings.open_time || '';
+                lastSettingsOpenTime = settings.open_time;
             }
-            if (closeInput && document.activeElement !== closeInput) {
+            if (closeInput && settings.close_time !== lastSettingsCloseTime) {
                 closeInput.value = settings.close_time || '';
+                lastSettingsCloseTime = settings.close_time;
             }
         }
 
