@@ -163,6 +163,12 @@
         @media (max-width: 768px) {
             .form-mode .container {
                 padding: 0;
+                height: 100vh;
+                overflow: hidden;
+            }
+            
+            .form-mode {
+                overflow: hidden;
             }
         }
 
@@ -909,21 +915,38 @@
 
             /* Otimizações do formulário público para mobile */
             #formView {
-                padding: 0;
+                height: 100vh;
+                overflow: hidden;
             }
 
             #formView .card {
                 padding: 12px;
-                margin-bottom: 0;
+                margin: 0;
                 border-radius: 0;
-                min-height: calc(100vh - 60px);
+                height: 100%;
                 display: flex;
                 flex-direction: column;
+                overflow: hidden;
+            }
+
+            #formView form {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                overflow: hidden;
+            }
+
+            #formView .form-group:last-of-type {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
             }
 
             #formView .card-header {
                 padding-bottom: 8px;
                 margin-bottom: 8px;
+                flex-shrink: 0;
             }
 
             #formView .card-title {
@@ -937,6 +960,7 @@
 
             #formView .form-group {
                 margin-bottom: 8px;
+                flex-shrink: 0;
             }
 
             #formView .form-label {
@@ -978,8 +1002,8 @@
             }
 
             #formView .routes-grid {
-                max-height: 35vh;
-                min-height: 100px;
+                flex: 1;
+                min-height: 0;
                 gap: 6px;
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
@@ -988,6 +1012,7 @@
             #formView .modal-actions {
                 margin-top: 10px;
                 padding-top: 10px;
+                flex-shrink: 0;
             }
 
             #formView .modal-actions .btn {
