@@ -2607,6 +2607,7 @@
                 const entregador = data[0];
                 const status = entregador.status || 'pendente';
                 const turnoInfo = entregador.route_turno ? `<strong>Turno:</strong> ${entregador.route_turno}<br>` : '';
+                const gaiolaInfo = entregador.route_gaiola ? `<strong>Gaiola:</strong> ${entregador.route_gaiola}<br>` : '';
 
                 // Mostrar modal com status
                 if (status === 'liberado') {
@@ -2614,7 +2615,8 @@
                         `${entregador.name}, você pode vir carregar sua rota!<br><br>` +
                         `<strong>Rota:</strong> ${entregador.route_cidade} - ${entregador.route_bairro}<br>` +
                         `<strong>Veículo:</strong> ${entregador.route_veiculo}<br>` +
-                        turnoInfo,
+                        turnoInfo +
+                        gaiolaInfo,
                         'success');
                 } else if (status === 'cancelado') {
                     openStatusModal('🚫 ROTA CANCELADA', 
