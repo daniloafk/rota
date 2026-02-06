@@ -1204,7 +1204,12 @@
 
             const toast = document.createElement('div');
             toast.className = 'toast';
-            toast.style.cssText = `background: ${c.bg}; color: ${c.text};`;
+            
+            // No admin, posiciona embaixo. No formulário público, posiciona no topo
+            const isPublic = window.location.hash === '#form' || !currentUser;
+            const position = isPublic ? 'top: 20px;' : 'bottom: 20px; top: auto;';
+            
+            toast.style.cssText = `background: ${c.bg}; color: ${c.text}; ${position}`;
             toast.innerHTML = `
                 <span style="font-size: 20px;">${c.icon}</span>
                 <span style="flex: 1;">${message}</span>
