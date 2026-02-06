@@ -1179,8 +1179,9 @@
         let currentUser = null;
         let routes = [];
         let deliverers = [];
-        let settings = { form_enabled: true, open_time: null, close_time: null };
+        let settings = { form_enabled: true, open_time: null, close_time: null, manual_override: false };
         let realtimeChannel = null;
+        let lastScheduleState = null; // Para detectar mudança de horário
 
         // ============================================================
         // HELPERS
@@ -1496,35 +1497,67 @@
         // CONTROLE DO FORMULÁRIO
         // ============================================================
         function isFormOpen() {
-            const { form_enabled, open_time, close_time } = settings;
+            const { form_enabled, open_time, close_time, manual_override } = settings;
             
-            // Se tem horários configurados, eles têm PRIORIDADE
-            if (open_time || close_time) {
-                const now = new Date();
-                const currentTime = now.toTimeString().slice(0, 5); // HH:MM
-                
-                // Apenas horário de ABRIR definido
-                if (open_time && !close_time) {
-                    return currentTime >= open_time;
-                }
-                // Apenas horário de FECHAR definido
-                else if (!open_time && close_time) {
-                    return currentTime < close_time;
-                }
-                // Ambos horários definidos
-                else if (open_time && close_time) {
-                    if (open_time <= close_time) {
-                        // Janela normal (ex: 08:00 - 18:00)
-                        return currentTime >= open_time && currentTime < close_time;
-                    } else {
-                        // Janela atravessando meia-noite (ex: 22:00 - 06:00)
-                        return currentTime >= open_time || currentTime < close_time;
-                    }
+            // Se não tem horários configurados, usa apenas form_enabled
+            if (!open_time && !close_time) {
+                return form_enabled;
+            }
+            
+            // Calcula se estamos dentro da janela de horário
+            const now = new Date();
+            const currentTime = now.toTimeString().slice(0, 5); // HH:MM
+            let dentroDoHorario = false;
+            
+            // Apenas horário de ABRIR definido
+            if (open_time && !close_time) {
+                dentroDoHorario = currentTime >= open_time;
+            }
+            // Apenas horário de FECHAR definido
+            else if (!open_time && close_time) {
+                dentroDoHorario = currentTime < close_time;
+            }
+            // Ambos horários definidos
+            else if (open_time && close_time) {
+                if (open_time <= close_time) {
+                    // Janela normal (ex: 08:00 - 18:00)
+                    dentroDoHorario = currentTime >= open_time && currentTime < close_time;
+                } else {
+                    // Janela atravessando meia-noite (ex: 22:00 - 06:00)
+                    dentroDoHorario = currentTime >= open_time || currentTime < close_time;
                 }
             }
             
-            // Sem horários = usa form_enabled (controle manual)
-            return form_enabled;
+            // Se houve override manual E estamos FORA do horário, usa form_enabled
+            if (manual_override && !dentroDoHorario) {
+                return form_enabled;
+            }
+            
+            // Dentro do horário OU sem override = usa o horário
+            return dentroDoHorario;
+        }
+        
+        // Função auxiliar para verificar se estamos dentro do horário
+        function isWithinSchedule() {
+            const { open_time, close_time } = settings;
+            
+            if (!open_time && !close_time) return null; // Sem horários
+            
+            const now = new Date();
+            const currentTime = now.toTimeString().slice(0, 5);
+            
+            if (open_time && !close_time) {
+                return currentTime >= open_time;
+            } else if (!open_time && close_time) {
+                return currentTime < close_time;
+            } else if (open_time && close_time) {
+                if (open_time <= close_time) {
+                    return currentTime >= open_time && currentTime < close_time;
+                } else {
+                    return currentTime >= open_time || currentTime < close_time;
+                }
+            }
+            return null;
         }
 
         function updateFormControlUI() {
@@ -1569,7 +1602,11 @@
         async function toggleFormEnabled() {
             showLoading();
             try {
-                await updateSettings({ ...settings, form_enabled: !settings.form_enabled });
+                await updateSettings({ 
+                    ...settings, 
+                    form_enabled: !settings.form_enabled,
+                    manual_override: true // Marca que houve ação manual
+                });
                 showToast(`Formulário ${settings.form_enabled ? 'habilitado' : 'desabilitado'}!`, 'success');
             } catch (error) {
                 showToast('Erro: ' + error.message, 'danger');
@@ -1594,7 +1631,8 @@
                 await updateSettings({
                     ...settings,
                     open_time: openTime || null,
-                    close_time: closeTime || null
+                    close_time: closeTime || null,
+                    manual_override: false // Reseta override ao salvar novos horários
                 });
                 
                 // Mensagem de feedback clara
@@ -1627,7 +1665,8 @@
                 await updateSettings({
                     ...settings,
                     open_time: null,
-                    close_time: null
+                    close_time: null,
+                    manual_override: false // Reseta override
                 });
                 showToast('Horários removidos! Controle manual ativo.', 'success');
             } catch (error) {
@@ -2355,6 +2394,21 @@
             // Recarrega as settings do banco para pegar mudanças
             await loadSettings();
             
+            // Verifica se entrou no horário para resetar manual_override
+            const currentScheduleState = isWithinSchedule();
+            if (currentScheduleState !== null && lastScheduleState !== null) {
+                // Se mudou de fora para dentro do horário, reseta o override
+                if (!lastScheduleState && currentScheduleState && settings.manual_override) {
+                    console.log('⏰ Entrou no horário - resetando manual_override');
+                    try {
+                        await updateSettings({ ...settings, manual_override: false });
+                    } catch (e) {
+                        console.error('Erro ao resetar manual_override:', e);
+                    }
+                }
+            }
+            lastScheduleState = currentScheduleState;
+            
             // Aplica disponibilidade do formulário
             if (isPublic) {
                 const wasOpen = lastFormState;
@@ -2379,6 +2433,8 @@
                     form_enabled: settings.form_enabled,
                     open_time: settings.open_time,
                     close_time: settings.close_time,
+                    manual_override: settings.manual_override,
+                    dentro_horario: currentScheduleState,
                     formulario_aberto: isNowOpen
                 });
             }
