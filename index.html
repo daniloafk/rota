@@ -1181,7 +1181,6 @@
         let deliverers = [];
         let settings = { form_enabled: true, open_time: null, close_time: null };
         let realtimeChannel = null;
-        let manualOverride = false; // Flag para indicar que houve ação manual
 
         // ============================================================
         // HELPERS
@@ -1497,9 +1496,43 @@
         // CONTROLE DO FORMULÁRIO
         // ============================================================
         function isFormOpen() {
-            // SIMPLES: O formulário está aberto se form_enabled = true
-            // A lógica de horários é processada apenas no admin para mudar o form_enabled
-            return settings.form_enabled;
+            const { form_enabled, open_time, close_time } = settings;
+            
+            // Se form_enabled = false (desabilitado manual), SEMPRE fechado
+            if (!form_enabled) {
+                return false;
+            }
+            
+            // Se form_enabled = true, verifica horários
+            // Se não tem horários configurados, está aberto
+            if (!open_time && !close_time) {
+                return true;
+            }
+            
+            // Se tem horários, calcula se está dentro da janela
+            const now = new Date();
+            const currentTime = now.toTimeString().slice(0, 5); // HH:MM
+            
+            // Apenas horário de ABRIR definido
+            if (open_time && !close_time) {
+                return currentTime >= open_time;
+            }
+            // Apenas horário de FECHAR definido
+            else if (!open_time && close_time) {
+                return currentTime < close_time;
+            }
+            // Ambos horários definidos
+            else if (open_time && close_time) {
+                if (open_time <= close_time) {
+                    // Janela normal (ex: 08:00 - 18:00)
+                    return currentTime >= open_time && currentTime < close_time;
+                } else {
+                    // Janela atravessando meia-noite (ex: 22:00 - 06:00)
+                    return currentTime >= open_time || currentTime < close_time;
+                }
+            }
+            
+            return true;
         }
 
         function updateFormControlUI() {
@@ -1544,9 +1577,8 @@
         async function toggleFormEnabled() {
             showLoading();
             try {
-                manualOverride = true; // Marca que houve ação manual
                 await updateSettings({ ...settings, form_enabled: !settings.form_enabled });
-                showToast(`Formulário ${settings.form_enabled ? 'habilitado' : 'desabilitado'} manualmente!`, 'success');
+                showToast(`Formulário ${settings.form_enabled ? 'habilitado' : 'desabilitado'}!`, 'success');
             } catch (error) {
                 showToast('Erro: ' + error.message, 'danger');
             } finally {
@@ -1567,9 +1599,6 @@
 
             showLoading();
             try {
-                // Reseta o override manual quando salva novos horários
-                manualOverride = false;
-                
                 await updateSettings({
                     ...settings,
                     open_time: openTime || null,
@@ -1603,7 +1632,6 @@
             
             showLoading();
             try {
-                manualOverride = false; // Reseta override
                 await updateSettings({
                     ...settings,
                     open_time: null,
@@ -2325,7 +2353,9 @@
             setupFileUpload();
         }
 
-        // Verificar horário do formulário periodicamente (a cada 10 segundos)
+        // Verificar horário do formulário periodicamente (a cada 30 segundos)
+        let lastFormState = null;
+        
         setInterval(async () => {
             const isPublic = window.location.hash === '#form' || document.querySelector('#formView.active');
             const isAdmin = currentUser !== null;
@@ -2333,64 +2363,38 @@
             // Recarrega as settings do banco para pegar mudanças
             await loadSettings();
             
-            const now = new Date();
-            const currentTime = now.toTimeString().slice(0, 5); // HH:MM
-            const { form_enabled, open_time, close_time } = settings;
-            
-            // LÓGICA DE AUTO-HABILITAR/DESABILITAR baseado no horário
-            // Só executa se NÃO houve override manual
-            if (isAdmin && (open_time || close_time) && !manualOverride) {
-                let shouldBeEnabled = form_enabled;
-                
-                // Apenas horário de ABRIR: habilita quando chegar a hora
-                if (open_time && !close_time) {
-                    shouldBeEnabled = currentTime >= open_time;
-                }
-                // Apenas horário de FECHAR: desabilita quando chegar a hora
-                else if (!open_time && close_time) {
-                    shouldBeEnabled = currentTime < close_time;
-                }
-                // Ambos horários definidos
-                else if (open_time && close_time) {
-                    if (open_time <= close_time) {
-                        // Janela normal (ex: 08:00 - 18:00)
-                        shouldBeEnabled = currentTime >= open_time && currentTime < close_time;
-                    } else {
-                        // Janela atravessando meia-noite (ex: 22:00 - 06:00)
-                        shouldBeEnabled = currentTime >= open_time || currentTime < close_time;
-                    }
-                }
-                
-                // Se o estado deveria mudar, atualiza automaticamente
-                if (shouldBeEnabled !== form_enabled) {
-                    console.log(`⏰ Horário atingido! ${shouldBeEnabled ? 'ABRINDO' : 'FECHANDO'} formulário automaticamente...`);
-                    try {
-                        await updateSettings({ ...settings, form_enabled: shouldBeEnabled });
-                        showToast(shouldBeEnabled ? '🟢 Formulário ABERTO automaticamente!' : '🔴 Formulário FECHADO automaticamente!', shouldBeEnabled ? 'success' : 'warning');
-                    } catch (error) {
-                        console.error('Erro ao atualizar form_enabled:', error);
-                    }
-                }
-            } else if (manualOverride) {
-                console.log('🖐️ Override manual ativo - horário automático ignorado');
-            }
-            
+            // Aplica disponibilidade do formulário
             if (isPublic) {
+                const wasOpen = lastFormState;
+                const isNowOpen = isFormOpen();
+                
                 applyFormAvailability();
                 
+                // Notificar se mudou de estado
+                if (lastFormState !== null && wasOpen !== isNowOpen) {
+                    if (isNowOpen) {
+                        showToast('🟢 Formulário ABERTO! Você já pode se cadastrar.', 'success');
+                    } else {
+                        showToast('🔴 Formulário FECHADO! Aguarde o horário de liberação.', 'warning');
+                    }
+                }
+                
+                lastFormState = isNowOpen;
+                
                 // Log para debug
-                console.log('⏰ Verificação periódica:', {
-                    hora_atual: currentTime,
+                console.log('⏰ Verificação:', {
+                    hora_atual: new Date().toTimeString().slice(0, 5),
                     form_enabled: settings.form_enabled,
                     open_time: settings.open_time,
-                    close_time: settings.close_time
+                    close_time: settings.close_time,
+                    formulario_aberto: isNowOpen
                 });
             }
             
-            if (currentUser) {
+            if (isAdmin) {
                 updateFormControlUI();
             }
-        }, 10000); // A cada 10 segundos
+        }, 30000); // A cada 30 segundos
 
         // Iniciar
         document.addEventListener('DOMContentLoaded', init);
