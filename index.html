@@ -3289,12 +3289,12 @@
                 let mensagem = error.message;
                 
                 if (error.message.includes('unique_route') || error.message.includes('route_id')) {
-                    mensagem = '❌ Esta rota acabou de ser escolhida por outro entregador! Selecione outra rota.';
+                    mensagem = 'Esta rota acabou de ser escolhida por outro entregador! Selecione outra rota.';
                     // Recarrega lista de rotas para atualizar
                     await loadDeliverers();
                     renderFormRoutes();
                 } else if (error.message.includes('unique_vehicle_plate') || error.message.includes('vehicle_plate')) {
-                    mensagem = '❌ Esta placa já está cadastrada em outra rota!';
+                    mensagem = 'Esta placa já está cadastrada em outra rota!';
                 }
                 
                 showToast(mensagem, 'danger');
