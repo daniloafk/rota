@@ -942,14 +942,16 @@
                 height: 100vh !important;
                 overflow: hidden !important;
                 padding: 0 !important;
+                position: relative !important;
             }
 
             #formView .form-public-card {
-                height: 100vh !important;
-                max-height: 100vh !important;
+                height: calc(100vh - 60px) !important;
+                max-height: calc(100vh - 60px) !important;
                 overflow: hidden !important;
                 margin: 0 !important;
                 padding: 12px !important;
+                padding-bottom: 0 !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 box-sizing: border-box !important;
@@ -995,13 +997,12 @@
                 font-size: 11px !important;
             }
 
-            /* Lista de rotas - ALTURA FIXA CALCULADA */
+            /* Lista de rotas */
             #formView .routes-grid {
-                height: calc(100vh - 380px) !important;
-                max-height: calc(100vh - 380px) !important;
                 overflow-y: auto !important;
                 -webkit-overflow-scrolling: touch !important;
                 gap: 6px !important;
+                max-height: 35vh !important;
             }
 
             #formView .route-item {
@@ -1022,16 +1023,25 @@
                 height: 18px !important;
             }
 
-            /* Botão */
+            /* BOTÃO FIXO NA PARTE INFERIOR */
             #formView .modal-actions {
-                margin: 8px 0 0 0 !important;
-                padding: 8px 0 0 0 !important;
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                background: var(--bg-secondary) !important;
+                margin: 0 !important;
+                padding: 12px !important;
+                border-top: 1px solid var(--border-color) !important;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+                z-index: 100 !important;
             }
 
             #formView .modal-actions .btn {
                 width: 100% !important;
-                padding: 12px !important;
-                font-size: 15px !important;
+                padding: 14px !important;
+                font-size: 16px !important;
+                margin: 0 !important;
             }
 
             #formView #formClosedBanner {
@@ -1045,6 +1055,7 @@
         @media (max-width: 480px) {
             #formView .form-public-card {
                 padding: 10px !important;
+                padding-bottom: 0 !important;
             }
 
             #formView .card-title {
@@ -1052,8 +1063,7 @@
             }
 
             #formView .routes-grid {
-                height: calc(100vh - 360px) !important;
-                max-height: calc(100vh - 360px) !important;
+                max-height: 30vh !important;
             }
 
             #formView .route-item {
@@ -1064,8 +1074,12 @@
                 font-size: 13px !important;
             }
 
-            #formView .modal-actions .btn {
+            #formView .modal-actions {
                 padding: 10px !important;
+            }
+
+            #formView .modal-actions .btn {
+                padding: 12px !important;
                 font-size: 14px !important;
             }
         }
@@ -1074,6 +1088,7 @@
         @media (max-width: 360px) {
             #formView .form-public-card {
                 padding: 8px !important;
+                padding-bottom: 0 !important;
             }
 
             #formView .card-title {
@@ -1085,8 +1100,7 @@
             }
 
             #formView .routes-grid {
-                height: calc(100vh - 330px) !important;
-                max-height: calc(100vh - 330px) !important;
+                max-height: 28vh !important;
             }
 
             #formView .form-input {
@@ -1104,6 +1118,11 @@
 
             #formView .route-details {
                 font-size: 10px !important;
+            }
+
+            #formView .modal-actions .btn {
+                padding: 10px !important;
+                font-size: 13px !important;
             }
         }
 
