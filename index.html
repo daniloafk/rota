@@ -1364,6 +1364,8 @@
                         <input type="text" class="search-input" id="searchDeliverers" placeholder="Buscar por nome ou placa..." oninput="renderDeliverersTable()">
                         <button class="btn btn-secondary" onclick="exportDeliverersToExcel()">📥 Exportar Excel</button>
                         <button class="btn btn-secondary" onclick="generateDeliverersImage()">📸 Gerar Imagem</button>
+                        <button class="btn btn-success" onclick="confirmUpdateAllStatus('liberado')" style="background: #059669;">🚚 Liberar Todas</button>
+                        <button class="btn btn-warning" onclick="confirmUpdateAllStatus('cancelado')" style="background: #dc2626;">🚫 Cancelar Todas</button>
                         <button class="btn btn-danger" onclick="confirmClearAllDeliverers()">🗑️ Limpar Tudo</button>
                     </div>
 
@@ -2567,6 +2569,36 @@
                 try {
                     await clearAllDeliverers();
                     showToast('Todos os entregadores foram deletados!', 'success');
+                } catch (error) {
+                    showToast('Erro: ' + error.message, 'danger');
+                } finally {
+                    hideLoading();
+                }
+            });
+        }
+
+        function confirmUpdateAllStatus(status) {
+            const isLiberar = status === 'liberado';
+            const titulo = isLiberar ? '🚚 Liberar Todas as Rotas' : '🚫 Cancelar Todas as Rotas';
+            const mensagem = isLiberar 
+                ? 'Confirma a liberação de TODAS as rotas para carregamento?' 
+                : 'Confirma o cancelamento de TODAS as rotas cadastradas?';
+            
+            showConfirm(titulo, mensagem, async () => {
+                showLoading();
+                try {
+                    const { error } = await supabaseClient
+                        .from('deliverers')
+                        .update({ status })
+                        .neq('id', '00000000-0000-0000-0000-000000000000');
+                    
+                    if (error) throw error;
+                    
+                    // Atualizar localmente
+                    deliverers.forEach(d => d.status = status);
+                    renderDeliverersTable();
+                    
+                    showToast(isLiberar ? '🚚 Todas as rotas foram liberadas!' : '🚫 Todas as rotas foram canceladas!', isLiberar ? 'success' : 'warning');
                 } catch (error) {
                     showToast('Erro: ' + error.message, 'danger');
                 } finally {
