@@ -1968,8 +1968,13 @@
                 toggleBtn.className = 'btn ' + (open ? 'btn-danger' : 'btn-primary');
             }
 
-            if (openInput) openInput.value = settings.open_time || '';
-            if (closeInput) closeInput.value = settings.close_time || '';
+            // Só atualiza os campos se NÃO estiverem com foco (usuário editando)
+            if (openInput && document.activeElement !== openInput) {
+                openInput.value = settings.open_time || '';
+            }
+            if (closeInput && document.activeElement !== closeInput) {
+                closeInput.value = settings.close_time || '';
+            }
         }
 
         function applyFormAvailability() {
