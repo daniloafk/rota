@@ -2606,13 +2606,15 @@
 
                 const entregador = data[0];
                 const status = entregador.status || 'pendente';
+                const turnoInfo = entregador.route_turno ? `<strong>Turno:</strong> ${entregador.route_turno}<br>` : '';
 
                 // Mostrar modal com status
                 if (status === 'liberado') {
                     openStatusModal('🚚 LIBERADO PARA CARREGAR!', 
                         `${entregador.name}, você pode vir carregar sua rota!<br><br>` +
                         `<strong>Rota:</strong> ${entregador.route_cidade} - ${entregador.route_bairro}<br>` +
-                        `<strong>Veículo:</strong> ${entregador.route_veiculo}`,
+                        `<strong>Veículo:</strong> ${entregador.route_veiculo}<br>` +
+                        turnoInfo,
                         'success');
                 } else if (status === 'cancelado') {
                     openStatusModal('🚫 ROTA CANCELADA', 
@@ -2623,8 +2625,9 @@
                     openStatusModal('⏳ AGUARDANDO LIBERAÇÃO', 
                         `${entregador.name}, seu cadastro está em análise.<br><br>` +
                         `<strong>Rota:</strong> ${entregador.route_cidade} - ${entregador.route_bairro}<br>` +
-                        `<strong>Veículo:</strong> ${entregador.route_veiculo}<br><br>` +
-                        `Aguarde a liberação para carregar.`,
+                        `<strong>Veículo:</strong> ${entregador.route_veiculo}<br>` +
+                        turnoInfo +
+                        `<br>Aguarde a liberação para carregar.`,
                         'warning');
                 }
 
