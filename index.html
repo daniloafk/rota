@@ -2970,6 +2970,10 @@
                 $('mainApp').style.display = 'block';
                 $('formControlInline').style.display = 'flex';
 
+                // Ativar view admin
+                document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                $('adminView').classList.add('active');
+
                 await loadAllData();
                 setupRealtime();
                 updateFormControlUI();
