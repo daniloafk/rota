@@ -2266,15 +2266,15 @@
                                 <tr>
                                     <td><code style="font-size: 11px; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">${escapeHtml(d.route_at_id) || '-'}</code></td>
                                     <td><strong>${escapeHtml(d.name)}</strong></td>
-                                    <td>
+                                    <td style="white-space: nowrap;">
                                         <span class="badge badge-info">${escapeHtml(d.vehicle_plate)}</span>
                                         <span class="badge" style="margin-left: 4px; ${getVehicleBadgeStyle(d.route_veiculo)}">${escapeHtml(d.route_veiculo)}</span>
                                     </td>
                                     <td><code style="font-size: 11px; background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px;">${escapeHtml(d.route_gaiola) || '-'}</code></td>
                                     <td><span class="badge" style="${turnoStyle}">${escapeHtml(d.route_turno) || '-'}</span></td>
-                                    <td><span class="badge badge-success">${escapeHtml(d.route_cidade)} - ${escapeHtml(d.route_bairro)}</span></td>
-                                    <td><span class="badge" style="${statusStyle}">${statusIcon} ${statusText}</span></td>
-                                    <td>${new Date(d.created_at).toLocaleDateString('pt-BR')}</td>
+                                    <td style="white-space: nowrap;"><span class="badge badge-success">${escapeHtml(d.route_cidade)} - ${escapeHtml(d.route_bairro)}</span></td>
+                                    <td style="white-space: nowrap;"><span class="badge" style="${statusStyle}">${statusIcon} ${statusText}</span></td>
+                                    <td style="white-space: nowrap;">${new Date(d.created_at).toLocaleDateString('pt-BR')}</td>
                                     <td style="white-space: nowrap;">
                                         <button class="btn-icon" onclick="updateDelivererStatus('${escapeHtml(d.id)}', 'liberado')" title="Liberar para carregar" style="background: #d1fae5; border-radius: 4px; padding: 4px 8px;">🚚</button>
                                         <button class="btn-icon" onclick="updateDelivererStatus('${escapeHtml(d.id)}', 'cancelado')" title="Cancelar rota" style="background: #fee2e2; border-radius: 4px; padding: 4px 8px;">🚫</button>
