@@ -1504,37 +1504,35 @@
                 return form_enabled;
             }
             
-            // Calcula se estamos dentro da janela de horário
+            // Se houve override manual, usa form_enabled (botão tem prioridade)
+            if (manual_override) {
+                return form_enabled;
+            }
+            
+            // Sem override, calcula baseado no horário
             const now = new Date();
             const currentTime = now.toTimeString().slice(0, 5); // HH:MM
-            let dentroDoHorario = false;
             
             // Apenas horário de ABRIR definido
             if (open_time && !close_time) {
-                dentroDoHorario = currentTime >= open_time;
+                return currentTime >= open_time;
             }
             // Apenas horário de FECHAR definido
             else if (!open_time && close_time) {
-                dentroDoHorario = currentTime < close_time;
+                return currentTime < close_time;
             }
             // Ambos horários definidos
             else if (open_time && close_time) {
                 if (open_time <= close_time) {
                     // Janela normal (ex: 08:00 - 18:00)
-                    dentroDoHorario = currentTime >= open_time && currentTime < close_time;
+                    return currentTime >= open_time && currentTime < close_time;
                 } else {
                     // Janela atravessando meia-noite (ex: 22:00 - 06:00)
-                    dentroDoHorario = currentTime >= open_time || currentTime < close_time;
+                    return currentTime >= open_time || currentTime < close_time;
                 }
             }
             
-            // Se houve override manual E estamos FORA do horário, usa form_enabled
-            if (manual_override && !dentroDoHorario) {
-                return form_enabled;
-            }
-            
-            // Dentro do horário OU sem override = usa o horário
-            return dentroDoHorario;
+            return form_enabled;
         }
         
         // Função auxiliar para verificar se estamos dentro do horário
@@ -1576,7 +1574,7 @@
             }
 
             if (toggleBtn) {
-                // Botão mostra ação oposta ao estado atual
+                // Botão mostra ação oposta ao estado atual do formulário
                 toggleBtn.textContent = open ? 'Desabilitar' : 'Habilitar';
                 toggleBtn.className = 'btn ' + (open ? 'btn-danger' : 'btn-primary');
             }
@@ -1603,19 +1601,26 @@
         async function toggleFormEnabled() {
             showLoading();
             try {
-                // Verifica o estado REAL do formulário (não apenas form_enabled)
-                const currentlyOpen = isFormOpen();
+                // Pega o estado REAL atual do formulário
+                const atualmenteAberto = isFormOpen();
                 
-                // Se está aberto, queremos fechar (form_enabled = false)
-                // Se está fechado, queremos abrir (form_enabled = true)
-                const newFormEnabled = !currentlyOpen;
+                // Se está aberto, queremos FECHAR (form_enabled = false)
+                // Se está fechado, queremos ABRIR (form_enabled = true)
+                const novoEstado = !atualmenteAberto;
+                
+                console.log('🔘 Toggle:', {
+                    atualmenteAberto,
+                    novoEstado,
+                    form_enabled_antes: settings.form_enabled
+                });
                 
                 await updateSettings({ 
                     ...settings, 
-                    form_enabled: newFormEnabled,
-                    manual_override: true // Marca que houve ação manual
+                    form_enabled: novoEstado,
+                    manual_override: true
                 });
-                showToast(`Formulário ${newFormEnabled ? 'habilitado' : 'desabilitado'}!`, 'success');
+                
+                showToast(`Formulário ${novoEstado ? 'habilitado' : 'desabilitado'}!`, 'success');
             } catch (error) {
                 showToast('Erro: ' + error.message, 'danger');
             } finally {
