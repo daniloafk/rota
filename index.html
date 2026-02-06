@@ -899,6 +899,276 @@
             .login-card { padding: 32px 24px; }
 
             .routes-grid { max-height: 300px; }
+
+            /* Otimizações do formulário público para mobile */
+            #formView .card {
+                padding: 12px;
+            }
+
+            #formView .card-header {
+                padding-bottom: 8px;
+                margin-bottom: 8px;
+            }
+
+            #formView .card-title {
+                font-size: 16px;
+            }
+
+            #formView .card-subtitle {
+                font-size: 11px;
+                margin-top: 2px;
+            }
+
+            #formView .form-group {
+                margin-bottom: 8px;
+            }
+
+            #formView .form-label {
+                font-size: 12px;
+                margin-bottom: 3px;
+            }
+
+            #formView .form-input {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            #formView .filter-section {
+                margin-bottom: 6px;
+            }
+
+            #formView .filter-section label {
+                font-size: 11px !important;
+            }
+
+            #formView .route-item {
+                padding: 8px 10px;
+                gap: 8px;
+                border-radius: 8px;
+            }
+
+            #formView .route-location {
+                font-size: 13px;
+                margin-bottom: 1px;
+            }
+
+            #formView .route-details {
+                font-size: 11px;
+            }
+
+            #formView .route-checkbox {
+                width: 16px;
+                height: 16px;
+            }
+
+            #formView .routes-grid {
+                max-height: 35vh;
+                gap: 6px;
+            }
+
+            #formView .modal-actions {
+                margin-top: 10px;
+            }
+
+            #formView .modal-actions .btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+
+            #formView #formClosedBanner {
+                padding: 10px;
+                font-size: 12px;
+            }
+
+            #formView #formClosedBanner span {
+                font-size: 16px;
+            }
+        }
+
+        /* Celulares pequenos - otimização extra */
+        @media (max-width: 480px) {
+            #formView .card {
+                padding: 10px;
+                border-radius: 10px;
+            }
+
+            #formView .card-header {
+                padding-bottom: 6px;
+                margin-bottom: 6px;
+            }
+
+            #formView .card-title {
+                font-size: 15px;
+            }
+
+            #formView .card-subtitle {
+                font-size: 10px;
+            }
+
+            #formView .form-group {
+                margin-bottom: 6px;
+            }
+
+            #formView .form-label {
+                font-size: 11px;
+                margin-bottom: 2px;
+            }
+
+            #formView .form-input {
+                padding: 7px 8px;
+                font-size: 13px;
+                border-radius: 6px;
+            }
+
+            #formView .filter-section {
+                margin-bottom: 4px;
+            }
+
+            #formView .route-item {
+                padding: 6px 8px;
+                border-radius: 6px;
+                gap: 6px;
+            }
+
+            #formView .route-location {
+                font-size: 12px;
+            }
+
+            #formView .route-details {
+                font-size: 10px;
+            }
+
+            #formView .route-checkbox {
+                width: 14px;
+                height: 14px;
+            }
+
+            #formView .routes-grid {
+                max-height: 30vh;
+                gap: 4px;
+            }
+
+            #formView .modal-actions {
+                margin-top: 8px;
+            }
+
+            #formView .modal-actions .btn {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+        }
+
+        /* Celulares muito pequenos */
+        @media (max-width: 360px) {
+            #formView .card {
+                padding: 8px;
+            }
+
+            #formView .card-title {
+                font-size: 14px;
+            }
+
+            #formView .card-subtitle {
+                font-size: 9px;
+            }
+
+            #formView .form-label {
+                font-size: 10px;
+            }
+
+            #formView .form-input {
+                padding: 6px 7px;
+                font-size: 12px;
+            }
+
+            #formView .route-item {
+                padding: 5px 6px;
+            }
+
+            #formView .route-location {
+                font-size: 11px;
+            }
+
+            #formView .route-details {
+                font-size: 9px;
+            }
+
+            #formView .routes-grid {
+                max-height: 28vh;
+                gap: 3px;
+            }
+
+            #formView .modal-actions .btn {
+                padding: 7px 12px;
+                font-size: 11px;
+            }
+        }
+
+        /* Tela muito baixa (landscape ou telas curtas) */
+        @media (max-height: 600px) {
+            #formView .card-header {
+                padding-bottom: 4px;
+                margin-bottom: 4px;
+            }
+
+            #formView .card-subtitle {
+                display: none;
+            }
+
+            #formView .form-group {
+                margin-bottom: 4px;
+            }
+
+            #formView .routes-grid {
+                max-height: 25vh;
+            }
+
+            #formView .filter-section {
+                margin-bottom: 3px;
+            }
+
+            #formView .modal-actions {
+                margin-top: 6px;
+            }
+        }
+
+        /* Formulário público - otimizações para ocupar tela toda em mobile */
+        @media (max-width: 768px) {
+            #formView {
+                padding: 0;
+            }
+
+            .form-public-card {
+                border-radius: 0 !important;
+                border-left: none !important;
+                border-right: none !important;
+                margin: 0 !important;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .form-public-card .card-header {
+                padding: 12px 16px 8px;
+            }
+
+            .form-public-card form {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                padding: 0 16px 16px;
+            }
+
+            .form-public-card .routes-grid {
+                flex: 1;
+                max-height: none;
+                min-height: 150px;
+            }
+
+            .form-public-card .modal-actions {
+                margin-top: auto;
+                padding-top: 12px;
+            }
         }
 
         @media (max-width: 1200px) {
@@ -1092,7 +1362,7 @@
 
             <!-- Form View (Public) -->
             <div id="formView" class="view">
-                <div class="card" style="max-width: 900px; margin: 0 auto;">
+                <div class="card form-public-card" style="max-width: 900px; margin: 0 auto;">
                     <div class="card-header">
                         <h2 class="card-title">📝 Cadastro de Entregador</h2>
                         <p class="card-subtitle">Preencha seus dados e escolha uma rota disponível</p>
