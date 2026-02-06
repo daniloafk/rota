@@ -2311,6 +2311,23 @@
                 if (cityFilter !== 'all') filtered = filtered.filter(r => r.cidade === cityFilter);
                 if (vehicleFilter !== 'all') filtered = filtered.filter(r => r.veiculo === vehicleFilter);
 
+                // Ordenar por cidade e depois por turno (AM primeiro, PM depois)
+                filtered.sort((a, b) => {
+                    // Primeiro ordena por cidade
+                    const cidadeCompare = (a.cidade || '').localeCompare(b.cidade || '');
+                    if (cidadeCompare !== 0) return cidadeCompare;
+                    
+                    // Depois por bairro
+                    const bairroCompare = (a.bairro || '').localeCompare(b.bairro || '');
+                    if (bairroCompare !== 0) return bairroCompare;
+                    
+                    // Por último por turno (AM primeiro, PM depois, vazio por último)
+                    const turnoOrder = { 'AM': 1, 'PM': 2 };
+                    const turnoA = turnoOrder[a.turno] || 3;
+                    const turnoB = turnoOrder[b.turno] || 3;
+                    return turnoA - turnoB;
+                });
+
                 if (filtered.length === 0) {
                     container.innerHTML = `
                         <div class="alert alert-info">
