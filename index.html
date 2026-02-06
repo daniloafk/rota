@@ -519,7 +519,7 @@
         .filter-chips {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
             margin-top: 8px;
         }
 
@@ -532,6 +532,7 @@
             transition: all 0.2s ease;
             background: var(--bg-secondary);
             color: var(--text-secondary);
+            white-space: nowrap;
         }
 
         .filter-chip:hover { border-color: var(--accent-primary); }
@@ -540,6 +541,17 @@
             border-color: var(--accent-primary);
             background: var(--accent-primary);
             color: white;
+        }
+
+        @media (max-width: 480px) {
+            .filter-chips {
+                gap: 4px;
+            }
+            .filter-chip {
+                padding: 5px 10px;
+                font-size: 12px;
+                border-width: 1.5px;
+            }
         }
 
         /* Login */
