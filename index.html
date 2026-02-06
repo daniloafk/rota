@@ -1724,7 +1724,8 @@
                 (r.at_id || '').toLowerCase().includes(search) ||
                 r.cidade.toLowerCase().includes(search) ||
                 r.bairro.toLowerCase().includes(search) ||
-                (r.gaiola || '').toLowerCase().includes(search)
+                (r.gaiola || '').toLowerCase().includes(search) ||
+                (r.turno || '').toLowerCase().includes(search)
             );
 
             const occupiedIds = new Set(deliverers.map(d => d.route_id));
@@ -1739,6 +1740,7 @@
                                 <th>Bairro</th>
                                 <th>Veículo</th>
                                 <th>Gaiola</th>
+                                <th>AM/PM</th>
                                 <th>Status</th>
                                 <th>Ações</th>
                             </tr>
@@ -1746,6 +1748,7 @@
                         <tbody>
                             ${filtered.map(r => {
                                 const occupied = occupiedIds.has(r.id);
+                                const turnoStyle = r.turno === 'AM' ? 'background: #fef3c7; color: #92400e;' : r.turno === 'PM' ? 'background: #dbeafe; color: #1e40af;' : 'background: #f3f4f6; color: #6b7280;';
                                 return `
                                     <tr>
                                         <td><code style="font-size: 11px; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">${r.at_id || '-'}</code></td>
@@ -1753,6 +1756,7 @@
                                         <td>${r.bairro}</td>
                                         <td><span class="badge" style="${getVehicleBadgeStyle(r.veiculo)}">${r.veiculo}</span></td>
                                         <td><code style="font-size: 11px; background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px;">${r.gaiola || '-'}</code></td>
+                                        <td><span class="badge" style="${turnoStyle}">${r.turno || '-'}</span></td>
                                         <td><span class="badge ${occupied ? 'badge-warning' : 'badge-success'}">${occupied ? '🔒 Ocupada' : '✅ Livre'}</span></td>
                                         <td><button class="btn-icon" onclick="confirmDeleteRoute('${r.id}')">🗑️</button></td>
                                     </tr>
@@ -1783,7 +1787,8 @@
                 d.name.toLowerCase().includes(search) ||
                 d.vehicle_plate.toLowerCase().includes(search) ||
                 (d.route_at_id || '').toLowerCase().includes(search) ||
-                (d.route_gaiola || '').toLowerCase().includes(search)
+                (d.route_gaiola || '').toLowerCase().includes(search) ||
+                (d.route_turno || '').toLowerCase().includes(search)
             );
 
             container.innerHTML = `
@@ -1795,13 +1800,16 @@
                                 <th>Nome</th>
                                 <th>Placa / Veículo</th>
                                 <th>Gaiola</th>
+                                <th>AM/PM</th>
                                 <th>Rota</th>
                                 <th>Data</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${filtered.map(d => `
+                            ${filtered.map(d => {
+                                const turnoStyle = d.route_turno === 'AM' ? 'background: #fef3c7; color: #92400e;' : d.route_turno === 'PM' ? 'background: #dbeafe; color: #1e40af;' : 'background: #f3f4f6; color: #6b7280;';
+                                return `
                                 <tr>
                                     <td><code style="font-size: 11px; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">${d.route_at_id || '-'}</code></td>
                                     <td><strong>${d.name}</strong></td>
@@ -1810,11 +1818,12 @@
                                         <span class="badge" style="margin-left: 4px; ${getVehicleBadgeStyle(d.route_veiculo)}">${d.route_veiculo}</span>
                                     </td>
                                     <td><code style="font-size: 11px; background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px;">${d.route_gaiola || '-'}</code></td>
+                                    <td><span class="badge" style="${turnoStyle}">${d.route_turno || '-'}</span></td>
                                     <td><span class="badge badge-success">${d.route_cidade} - ${d.route_bairro}</span></td>
                                     <td>${new Date(d.created_at).toLocaleDateString('pt-BR')}</td>
                                     <td><button class="btn-icon" onclick="confirmDeleteDeliverer('${d.id}')">🗑️</button></td>
                                 </tr>
-                            `).join('')}
+                            `}).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -1916,16 +1925,19 @@
                     return;
                 }
 
-                container.innerHTML = filtered.map(r => `
+                container.innerHTML = filtered.map(r => {
+                    const turnoStyle = r.turno === 'AM' ? 'background: #fef3c7; color: #92400e;' : r.turno === 'PM' ? 'background: #dbeafe; color: #1e40af;' : '';
+                    const turnoHtml = r.turno ? `<span class="badge" style="${turnoStyle} margin-left: 8px; font-size: 10px;">${r.turno}</span>` : '';
+                    return `
                     <div class="route-item" data-id="${r.id}">
                         <input type="radio" class="route-checkbox" name="selectedRoute" value="${r.id}"
-                            data-atid="${r.at_id || ''}" data-cidade="${r.cidade}" data-bairro="${r.bairro}" data-veiculo="${r.veiculo}" data-gaiola="${r.gaiola || ''}">
+                            data-atid="${r.at_id || ''}" data-cidade="${r.cidade}" data-bairro="${r.bairro}" data-veiculo="${r.veiculo}" data-gaiola="${r.gaiola || ''}" data-turno="${r.turno || ''}">
                         <div class="route-info">
-                            <div class="route-location">📍 ${r.cidade} - ${r.bairro}</div>
+                            <div class="route-location">📍 ${r.cidade} - ${r.bairro}${turnoHtml}</div>
                             <div class="route-details">🚗 ${r.veiculo}</div>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
 
                 container.querySelectorAll('.route-item').forEach(item => {
                     item.onclick = (e) => {
@@ -2120,6 +2132,7 @@
                     const bairro = row.Bairro || row.Bairros || row.bairro || row.BAIRRO;
                     const veiculo = row['Tipo de Veículo'] || row['Tipo Veiculo'] || row['Tipo Veículo'] || row.Veiculo || row.veiculo || row.VEICULO;
                     const gaiola = row.Gaiola || row.gaiola || row.GAIOLA || '';
+                    const turno = row['AM/PM'] || row['am/pm'] || row.Turno || row.turno || row.TURNO || '';
 
                     if (cidade && bairro && veiculo) {
                         await saveRoute({ 
@@ -2127,7 +2140,8 @@
                             cidade: cidade.trim(), 
                             bairro: bairro.trim(), 
                             veiculo: veiculo.trim(),
-                            gaiola: gaiola.toString().trim() || null
+                            gaiola: gaiola.toString().trim() || null,
+                            turno: turno.toString().trim().toUpperCase() || null
                         });
                         count++;
                     }
@@ -2160,7 +2174,8 @@
                 'Cidade': r.cidade,
                 'Bairro': r.bairro,
                 'Tipo de Veículo': r.veiculo,
-                'Gaiola': r.gaiola || ''
+                'Gaiola': r.gaiola || '',
+                'AM/PM': r.turno || ''
             }));
 
             const ws = XLSX.utils.json_to_sheet(data);
@@ -2178,6 +2193,7 @@
                 'Placa': d.vehicle_plate,
                 'Veículo': d.route_veiculo,
                 'Gaiola': d.route_gaiola || '',
+                'AM/PM': d.route_turno || '',
                 'Cidade': d.route_cidade,
                 'Bairro': d.route_bairro,
                 'Data': new Date(d.created_at).toLocaleDateString('pt-BR')
@@ -2299,6 +2315,7 @@
             const bairro = selectedRadio.dataset.bairro;
             const veiculo = selectedRadio.dataset.veiculo;
             const gaiola = selectedRadio.dataset.gaiola || null;
+            const turno = selectedRadio.dataset.turno || null;
 
             try {
                 await saveDeliverer({
@@ -2309,7 +2326,8 @@
                     route_cidade: cidade,
                     route_bairro: bairro,
                     route_veiculo: veiculo,
-                    route_gaiola: gaiola
+                    route_gaiola: gaiola,
+                    route_turno: turno
                 });
 
                 $('delivererForm').reset();
