@@ -2274,18 +2274,6 @@
             const veiculo = selectedRadio.dataset.veiculo;
 
             try {
-                // Verificar se placa já existe
-                const existingPlate = deliverers.find(d => d.vehicle_plate === plate);
-                if (existingPlate) {
-                    throw new Error('Esta placa já possui uma rota cadastrada!');
-                }
-
-                // Verificar se rota ainda está disponível
-                const routeTaken = deliverers.find(d => d.route_id === routeId);
-                if (routeTaken) {
-                    throw new Error('Esta rota já foi escolhida por outro entregador!');
-                }
-
                 await saveDeliverer({
                     name,
                     vehicle_plate: plate,
@@ -2299,7 +2287,19 @@
                 document.querySelectorAll('.route-item').forEach(i => i.classList.remove('selected'));
                 openModal('successModal');
             } catch (error) {
-                showToast(error.message, 'danger');
+                // Tratar erros de constraint do banco
+                let mensagem = error.message;
+                
+                if (error.message.includes('unique_route') || error.message.includes('route_id')) {
+                    mensagem = '❌ Esta rota acabou de ser escolhida por outro entregador! Selecione outra rota.';
+                    // Recarrega lista de rotas para atualizar
+                    await loadDeliverers();
+                    renderFormRoutes();
+                } else if (error.message.includes('unique_vehicle_plate') || error.message.includes('vehicle_plate')) {
+                    mensagem = '❌ Esta placa já está cadastrada em outra rota!';
+                }
+                
+                showToast(mensagem, 'danger');
             } finally {
                 hideLoading();
             }
