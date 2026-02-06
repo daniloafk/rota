@@ -2293,6 +2293,9 @@
             }
 
             applyFilters();
+            
+            // Garantir ajuste de altura após renderização inicial
+            setTimeout(adjustRoutesGridHeight, 50);
 
             function applyFilters() {
                 const cityFilter = cityFiltersContainer?.querySelector('.filter-chip.active')?.dataset.filter || 'all';
@@ -2385,6 +2388,16 @@
 
         // Recalcular quando redimensionar a tela
         window.addEventListener('resize', adjustRoutesGridHeight);
+
+        // Chamar após o DOM carregar completamente
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(adjustRoutesGridHeight, 100);
+        });
+
+        // Também chamar quando a página estiver completamente carregada
+        window.addEventListener('load', () => {
+            setTimeout(adjustRoutesGridHeight, 200);
+        });
 
         // ============================================================
         // AÇÕES
