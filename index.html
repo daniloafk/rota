@@ -1288,7 +1288,7 @@
 
         <main class="container">
             <!-- Admin View -->
-            <div id="adminView" class="view active">
+            <div id="adminView" class="view">
                 <div class="alert alert-info">
                     <span>🔗</span>
                     <div>
@@ -3097,6 +3097,10 @@
                         $('mainApp').style.display = 'block';
                         $('formControlInline').style.display = 'flex';
                         $('currentUsername').textContent = currentUser.email.split('@')[0];
+
+                        // Ativar view admin
+                        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+                        $('adminView').classList.add('active');
 
                         await loadAllData();
                         setupRealtime();
